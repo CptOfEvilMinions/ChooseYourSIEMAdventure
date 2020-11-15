@@ -1,0 +1,44 @@
+#####################################################################
+# Create Splunk HEC token
+#####################################################################
+# For some reason the grep command fails so return 0
+- name: List HTTP event collectors
+  shell: "/opt/splunk/bin/splunk http-event-collector list -uri https://localhost:8089 -auth admin:{{ SIEM_PASSWORD }}  | grep -c 'token'; return 0"
+  register: hec_counter
+
+- name: Create HEC token
+  shell: '/opt/splunk/bin/splunk http-event-collector create {{ SPLUNK_HEC_NAME }} -uri https://localhost:8089 -description "HEC token for Logstash" -disabled 1 -index {{ SPLUNK_HEC_INDEX }}'
+  register: hec_token_creation
+  when: hec_counter.stdout|int == 0
+
+- name: Extract Splunk HEC token
+  set_fact: 
+    logstash_hec_token: "{{ hec_token_creation.stdout.split('\n')[1].split('=')[1] }}"
+  when: hec_counter.stdout|int == 0
+
+# - name: Print HEC token
+#   debug:
+#     msg: "{{ logstash_hec_token }}"
+#   when: hec_counter.stdout|int == 0
+
+- name: Enable HTTP event collectors
+  shell: '/opt/splunk/bin/splunk http-event-collector enable -uri https://localhost:8089'
+  when: hec_counter.stdout|int == 0
+
+#####################################################################
+# Get HEC token
+#####################################################################
+- name: Get HEC tokens
+  shell: '/opt/splunk/bin/splunk http-event-collector list -uri https://localhost:8089 | grep -A1 {{ SPLUNK_HEC_NAME }}'
+  register: hec_token_list
+  when: hec_counter.stdout|int > 0
+
+- name: Extract Splunk HEC token
+  set_fact: 
+    logstash_hec_token: "{{ hec_token_list.stdout.split('\n')[1].split('=')[1] }}"
+  when: hec_counter.stdout|int > 0
+
+# - name: Print HEC token
+#   debug:
+#     msg: "{{ logstash_hec_token }}"
+#   when: hec_counter.stdout|int > 0

@@ -1,0 +1,85 @@
+####################################################################
+# Install/Setup Logstash
+####################################################################
+- name: Add Elastic GPG key
+  apt_key:
+    url: "{{ ELASTIC_GPG_URL }}"
+    state: present
+
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ ELASTIC_REPO_URL }}"
+    state: present
+
+- name: Install Logstash
+  apt:
+    name: 'logstash'
+    state: latest
+
+####################################################################
+# Copy TLS private key and cert
+####################################################################
+- name: Create TLS directory
+  file:
+    path: /etc/logstash/tls
+    state: directory
+    owner: logstash
+    group: logstash
+
+- name: Copy TLS cert
+  template:
+    src: "conf/tls/docker.crt"
+    dest: "/etc/logstash/tls/{{ HOSTNAME }}.crt"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+- name: Copy TLS private key
+  template:
+    src: "conf/tls/docker.key"
+    dest: "/etc/logstash/tls/{{ HOSTNAME }}.key"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+####################################################################
+# Copy Logstash pipeline
+####################################################################
+- name: Copy Logstash pipeline
+  template:
+    src: "{{ item }}"
+    dest: "/etc/logstash/conf.d/{{ item | basename }}"
+    owner: logstash
+    group: logstash
+    mode: 0400
+  with_fileglob:
+    - conf/ansible/logstash/pipeline/*.conf
+  
+- debug:
+    msg: "{{ HOSTNAME }}"    
+- name: Copy Splunk output
+  template:
+    src: "conf/ansible/logstash/30-output-splunk.conf"
+    dest: "/etc/logstash/conf.d/30-output-splunk.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
+  when: HOSTNAME=="splunk"
+
+- name: Copy Splunk output
+  template:
+    src: "conf/ansible/logstash/30-output"
+    dest: "/etc/logstash/conf.d/30-output-elasticsearch.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
+  when: HOSTNAME=="elastic"
+
+####################################################################
+# Restart service
+####################################################################
+- name: Restart Logstash
+  service:
+    name: logstash
+    enabled: yes
+    state: restarted

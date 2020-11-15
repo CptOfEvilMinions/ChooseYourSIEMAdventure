@@ -1,0 +1,9 @@
+- hosts: 'elastic'
+  become: yes
+  become_user: root
+  tasks:
+    - include_vars: 'group_vars/elastic.yml'
+    - import_tasks: 'roles/init.yml'
+    - import_tasks: 'roles/elastic/setup_elasticsearch.yml'
+    - import_tasks: 'roles/elastic/setup_kibana.yml'
+    - import_tasks: 'roles/logstash/setup_logstash.yml'

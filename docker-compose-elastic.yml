@@ -1,0 +1,85 @@
+version: "2.2"
+services: 
+  ###################################################### NGINX ######################################################
+  nginx:
+    container_name: 'siem-elastic-nginx'
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile-nginx
+      args: 
+        NGINX_VERSION: ${NGINX_VERSION}
+        SERVICE_CONFIG: docker_kibana.conf
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 8000:80
+      - 8443:443
+    depends_on: 
+      - kibana
+
+  ###################################################### Kibana ######################################################
+  kibana:
+    container_name: 'siem-elastic-kibana'
+    restart: unless-stopped
+    image: kibana:${ELASTIC_VERSION}
+    environment:
+      - SERVER_NAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${SIEM_PASSWORD}
+    networks: 
+      - elastic-backend 
+    depends_on: 
+      - elasticsearch
+
+  ###################################################### Elasticsearch ######################################################
+  elasticsearch:
+    container_name: 'siem-elastic-elasticsearch'
+    restart: unless-stopped
+    image: elasticsearch:${ELASTIC_VERSION}
+    environment: 
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=${SIEM_PASSWORD}
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 9200:9200
+    volumes: 
+      - es-data:/usr/share/elasticsearch/data
+    cpus: 4
+    mem_limit: 1GB
+
+  ###################################################### Logstash ######################################################
+  logstash:
+    container_name: 'siem-elastic-logstash'
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: docker/elastic/Dockerfile-logstash
+      args: 
+        ELASTIC_VERSION: ${ELASTIC_VERSION} 
+        SIEM_USERNAME: elastic
+        SIEM_PASSWORD: ${SIEM_PASSWORD}
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 5044:5044
+    cpus: 4
+    mem_limit: 1GB
+    depends_on: 
+      - elasticsearch
+
+volumes: 
+  es-data:
+
+networks: 
+  elastic-backend:

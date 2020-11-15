@@ -1,0 +1,18 @@
+ARG LOGSTASH_VERSION
+FROM logstash:${LOGSTASH_VERSION}
+ARG SIEM_PASSWORD
+
+# Copy certs
+COPY conf/tls/*.crt /usr/share/logstash/tls/logstash.crt
+COPY conf/tls/*.key /usr/share/logstash/tls/logstash.key
+
+# Copy logstash.yml
+RUN rm -rf /usr/share/logstash/pipeline/logstash.conf
+COPY conf/docker/logstash/logstash_docker.yml /usr/share/logstash/config/logstash.yml
+
+# Copy pipeline configs
+COPY conf/docker/logstash/pipeline/ /usr/share/logstash/pipeline
+COPY conf/docker/logstash/30-output-splunk.conf /usr/share/logstash/pipeline/30-output-splunk.conf
+
+# Set elasticsearch password
+RUN sed -i "s/splunk-token/${SIEM_PASSWORD}/g" /usr/share/logstash/pipeline/30-output-splunk.conf

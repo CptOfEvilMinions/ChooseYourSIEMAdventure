@@ -1,0 +1,58 @@
+####################################################################
+# Install/Setup Nginx
+####################################################################
+- name: Install/Setup Nginx
+  package:
+    name: '{{ item }}'
+    state: latest
+  with_items:
+    - nginx
+
+- name: Create TLS directory for NGINX
+  file:
+    path: /etc/nginx/tls
+    owner: root
+    group: root
+    state: directory
+
+- name: Copy nginx.conf
+  template:
+    src: conf/ansible/nginx/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy Splunk configs
+  template:
+    src: 'conf/ansible/nginx/{{ item }}'
+    dest: '/etc/nginx/conf.d/{{ item }}'
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - 'splunk_api.conf'
+    - 'splunk_hec.conf'
+    - 'splunk_web.conf'
+  
+- name: Copy Self-signed public cert for splunk
+  template:
+    src: 'conf/tls/docker.key'
+    dest: '/etc/ssl/private/{{ HOSTNAME }}.key'
+    owner: 'root'
+    group: 'root'
+    mode: 0400
+
+- name: Copy Self-signed private key for splunk
+  template:
+    src: 'conf/tls/docker.crt'
+    dest: '/etc/ssl/certs/{{ HOSTNAME }}.crt'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+
+- name: Start Nginx service
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes

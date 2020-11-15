@@ -1,0 +1,64 @@
+version: "2.2"
+services: 
+  ###################################################### NGINX ######################################################
+  nginx:
+    container_name: 'siem-splunk-nginx'
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile-nginx
+      args: 
+        NGINX_VERSION: ${NGINX_VERSION}
+        SERVICE_CONFIG: docker_splunk.conf
+    networks: 
+      - default
+      - splunk-backend 
+    ports:
+      - 8000:80
+      - 8443:443
+    depends_on: 
+      - splunk
+
+  ###################################################### Splunk ######################################################
+  splunk:
+    image: splunk/splunk:${SPLUNK_VERSION}
+    container_name: 'siem-splunk-splunk'
+    restart: unless-stopped
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_HEC_TOKEN=${SIEM_PASSWORD}
+      - SPLUNK_PASSWORD=${SIEM_PASSWORD}
+    networks: 
+      - splunk-backend
+    volumes: 
+      - splunk-var:/opt/splunk/var
+      - splunk-etc:/opt/splunk/etc
+    cpus: 4
+    mem_limit: 1G
+
+  ###################################################### Logstash ######################################################
+  logstash:
+    container_name: 'siem-splunk-logstash'
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: docker/splunk/dockerfile-logstash
+      args:
+        LOGSTASH_VERSION: ${ELASTIC_VERSION}
+        SIEM_PASSWORD: ${SIEM_PASSWORD}
+    ports: 
+      - 5044:5044
+    networks: 
+      - default
+      - splunk-backend
+    depends_on: 
+      - splunk
+    cpus: 4
+    mem_limit: 1G
+
+networks: 
+  splunk-backend:
+
+volumes: 
+  splunk-var:
+  splunk-etc:

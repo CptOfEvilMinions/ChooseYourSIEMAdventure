@@ -1,0 +1,38 @@
+####################################################################
+# Install/Setup Elasticsearch
+####################################################################
+- name: Add Elastic GPG key
+  apt_key:
+    url: "{{ ELASTIC_GPG_URL }}"
+    state: present
+
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ ELASTIC_REPO_URL }}"
+    state: present
+
+- name: Install Elasticsearch
+  apt:
+    name: 'elasticsearch={{ ELASTIC_VERSION }}'
+    
+- name: Calculate half the memory of the VM
+  debug:
+    msg: '{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Setting the initial size of the toal heapsize for Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: '^-Xmx'
+    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Setting the maximum size of the toal heapsize for Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: '^-Xms'
+    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Restart Elasticsearch
+  service:
+    name: 'elasticsearch'
+    state: 'restarted'
+    enabled: yes

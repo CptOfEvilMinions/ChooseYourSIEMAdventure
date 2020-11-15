@@ -1,0 +1,44 @@
+####################################################################
+# Install Splunk  
+####################################################################
+- name: Stat Splunk download
+  stat:
+    path: '/tmp/splunk-{{ SPLUNK_VERSION }}-linux-2.6-amd64.deb'
+  register: splunk_dl
+
+- name: Download Splunk
+  get_url:
+    url: '{{ SPLUNK_DL_URL }}'
+    dest: '/tmp/splunk-{{ SPLUNK_VERSION }}-linux-2.6-amd64.deb'
+  when: not splunk_dl.stat.exists
+
+- name: Stat Splunk directory
+  stat:
+    path: '/opt/splunk/license-eula.txt'
+  register: splunk_dir
+
+- name: Install Splunk
+  apt:
+    deb: '/tmp/splunk-{{ SPLUNK_VERSION }}-linux-2.6-amd64.deb'
+  when: not splunk_dir.stat.exists
+
+- name: Stat ldap.conf
+  stat:
+    path: '/opt/splunk/etc/openldap/ldap.conf'
+  register: ldap_config
+
+- name: Add Splunk on startup, accept license, enter password
+  shell: /opt/splunk/bin/splunk enable boot-start --accept-license --answer-yes --no-prompt --seed-passwd {{ SIEM_PASSWORD }}
+  when: not ldap_config.stat.exists
+
+- name: Set Splunk to listen on localhost
+  lineinfile:
+    path: '/opt/splunk/etc/splunk-launch.conf'
+    line: 'SPLUNK_BINDIP=127.0.0.1'
+    create: yes
+
+- name: Restart Splunk service
+  service:
+    name: 'splunk'
+    enabled: yes
+    state: restarted

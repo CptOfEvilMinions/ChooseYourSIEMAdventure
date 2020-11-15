@@ -1,0 +1,37 @@
+####################################################################
+# Install/Setup FirewallD
+####################################################################
+- name: Setup Ubuntu UFW firewall
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow HTTP
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Allow HTTPS
+  ufw:
+    rule: allow
+    port: '443'
+    proto: tcp
+
+- name: Allow Logstash
+  ufw:
+    rule: allow
+    port: '5044'
+    proto: tcp
+
+- name: Allow Splunk API
+  ufw:
+    rule: allow
+    port: '8089'
+    proto: tcp
+
+- name: Allow Splunk universal forwarder
+  ufw:
+    rule: allow
+    port: '9997'
+    proto: tcp

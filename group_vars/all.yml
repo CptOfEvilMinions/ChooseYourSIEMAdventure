@@ -1,0 +1,6 @@
+###################################################### GENERAL ######################################################
+BASE_DOMAIN: 'hackinglab.local'
+TIMEZONE: 'Etc/UTC'
+
+SIEM_USERNAME: 'admin'
+SIEM_PASSWORD: 'Changeme123!'

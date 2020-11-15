@@ -1,0 +1,4 @@
+###################################################### Elastic ######################################################
+ELASTIC_VERSION: '7.9.0'
+ELASTIC_GPG_URL: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+ELASTIC_REPO_URL: 'deb https://artifacts.elastic.co/packages/7.x/apt stable main'

@@ -1,0 +1,43 @@
+####################################################################
+# Setup hostname
+####################################################################
+- name: Set hostname
+  hostname:
+    name: '{{ HOSTNAME }}.{{ BASE_DOMAIN }}'
+
+####################################################################
+#  Setup Timedatectl
+####################################################################
+- name: Set time to {{ TIMEZONE }}
+  shell: timedatectl set-ntp on && timedatectl set-timezone {{ TIMEZONE }}
+
+####################################################################
+# Apt update
+####################################################################
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+    
+- name: Update all packages to the latest version
+  apt:
+    upgrade: dist
+
+####################################################################
+# Reboot
+####################################################################
+- name: Reboot a slow machine that might have lots of updates to apply
+  reboot:
+    reboot_timeout: 3600
+    
+####################################################################
+# Install software
+####################################################################
+- name: Install software
+  package:
+    name: '{{ item }}'
+    state: latest
+  with_items:
+    - apt-transport-https
+    - htop
+    - tcpdump
+    - net-tools

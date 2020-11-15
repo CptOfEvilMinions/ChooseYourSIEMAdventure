@@ -1,0 +1,12 @@
+ARG NGINX_VERSION
+FROM nginx:${NGINX_VERSION}
+ARG SERVICE_CONFIG
+
+# Copy SSL
+RUN mkdir /etc/nginx/tls
+COPY conf/tls/*.key /etc/nginx/tls/docker.key
+COPY conf/tls/*.crt /etc/nginx/tls/docker.crt
+
+# Copy configs
+COPY conf/docker/nginx/nginx_docker.conf /etc/nginx/nginx.conf
+COPY conf/docker/nginx/${SERVICE_CONFIG} /etc/nginx/conf.d/${SERVICE_CONFIG}

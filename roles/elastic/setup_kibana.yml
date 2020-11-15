@@ -1,0 +1,12 @@
+################################################################################
+# Install Kibana
+################################################################################
+- name: Install Kibana
+  apt:
+    name: 'kibana={{ ELASTIC_VERSION }}'
+    
+- name: Restart Kibana
+  service:
+    name: 'kibana'
+    state: 'restarted'
+    enabled: yes
