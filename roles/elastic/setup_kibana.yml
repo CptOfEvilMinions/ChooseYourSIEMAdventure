@@ -4,7 +4,19 @@
 - name: Install Kibana
   apt:
     name: 'kibana={{ ELASTIC_VERSION }}'
-    
+
+- name: Set Kibana username for Elasticsearch
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '^#elasticsearch.username:'
+    line: 'elasticsearch.username: {{ kibana_es_username }}'
+
+- name: Set Kibana password for Elasticsearch
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '^#elasticsearch.password:'
+    line: 'elasticsearch.password: {{ kibana_es_password }}'
+
 - name: Restart Kibana
   service:
     name: 'kibana'

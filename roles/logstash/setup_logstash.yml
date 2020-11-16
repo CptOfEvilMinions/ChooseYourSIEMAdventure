@@ -54,9 +54,7 @@
     mode: 0400
   with_fileglob:
     - conf/ansible/logstash/pipeline/*.conf
-  
-- debug:
-    msg: "{{ HOSTNAME }}"    
+
 - name: Copy Splunk output
   template:
     src: "conf/ansible/logstash/30-output-splunk.conf"
@@ -66,9 +64,9 @@
     mode: 0400
   when: HOSTNAME=="splunk"
 
-- name: Copy Splunk output
+- name: Copy Elasticsearch output
   template:
-    src: "conf/ansible/logstash/30-output"
+    src: "conf/ansible/logstash/30-output-elasticsearch.conf"
     dest: "/etc/logstash/conf.d/30-output-elasticsearch.conf"
     owner: logstash
     group: logstash

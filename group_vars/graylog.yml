@@ -1,2 +1,21 @@
 ###################################################### Graylog ######################################################
-GRAYLOG_VERSION: '3.3.0'
+HOSTNAME: 'graylog'
+
+GRAYLOG_VERSION: '3.3'
+GRAYLOG_DL_URL: 'https://packages.graylog2.org/repo/packages/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+
+ELASTIC_VERSION: 'elasticsearch-oss'
+ELASTIC_GPG_URL: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+ELASTIC_REPO_URL: 'deb https://artifacts.elastic.co/packages/oss-6.x/apt stable main'
+
+MONGO_VERSION: '4.2'
+MONGO_GPG_URL: 'https://www.mongodb.org/static/pgp/server-4.2.asc'
+MONGO_REPO_URL: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/{{ MONGO_VERSION }} multiverse'
+
+### Beats input ###
+BEATS_TITLE: Beats input
+BEATS_TYPE: 'org.graylog.plugins.beats.Beats2Input'
+BEATS_PORT: 5044
+BEATS_TLS_ENABLE: true
+BEATS_TLS_CERT_FILE_PATH: "/etc/ssl/certs/{{ HOSTNAME }}.crt"
+BEATS_TLS_KEY_FILE_PATH: "/etc/ssl/private/{{ HOSTNAME }}.key"

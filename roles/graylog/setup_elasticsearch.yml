@@ -1,0 +1,48 @@
+#####################################################################
+# Install/Setup Elasticsearch
+#####################################################################
+- name: Add Elastic GPG key
+  apt_key:
+    url: "{{ ELASTIC_GPG_URL }}"
+    state: present 
+    
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ ELASTIC_REPO_URL }}"
+    state: present
+
+- name: Install Elastic
+  apt:
+    name: '{{ ELASTIC_VERSION }}'
+    state: latest
+
+- name: Specify ES cluster name
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^cluster.name:'
+    line: 'cluster.name: graylog'
+
+- name: Set action mode for ES
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^action.auto_create_index:'
+    line: 'action.auto_create_index: false'
+
+- name: Setting the initial size of the toal heapsize for Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: '^-Xmx'
+    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Setting the maximum size of the toal heapsize for Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: '^-Xms'
+    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Start Elastic service
+  service:
+    name: 'elasticsearch'
+    state: restarted
+    enabled: yes
+

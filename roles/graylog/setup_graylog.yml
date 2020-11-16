@@ -1,0 +1,104 @@
+#####################################################################
+# Install/Setup Graylog
+#####################################################################
+- name: Stat Graylog download
+  stat:
+    path: '/tmp/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+  register: graylog_dl
+
+- name: Download Graylog
+  get_url:
+    url: '{{ GRAYLOG_DL_URL }}'
+    dest: '/tmp/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+  when: not graylog_dl.stat.exists
+
+- name: Stat Graylog directory
+  stat:
+    path: '/usr/share/graylog/graylog.jar'
+  register: graylog_dir
+
+- name: Install Graylog repo
+  apt:
+    deb: '/tmp/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+  when: not graylog_dir.stat.exists
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Install Graylog
+  apt:
+    name: ['graylog-server', 'graylog-enterprise-plugins', 'graylog-integrations-plugins', 'graylog-enterprise-integrations-plugins']
+    state: latest
+
+- name: Covert password to sha256 hash
+  shell: "echo -n {{ SIEM_PASSWORD }} | sha256sum | awk '{print $1}'"
+  register: pass_contents
+
+- name: Set admin password
+  lineinfile:
+    path: /etc/graylog/server/server.conf
+    regexp: '^root_password_sha2 ='
+    line: "root_password_sha2 = {{ pass_contents.stdout }}"
+
+- name: Generate secret key
+  shell: "pwgen -s 96 1"
+  register: secret_key_content
+
+- name: Set secret key
+  shell: sed -i -e "s/password_secret =.*/password_secret = {{ secret_key_content.stdout }}/" /etc/graylog/server/server.conf
+
+- name: Start and Enable Graylog service
+  service:
+    name: graylog-server.service
+    state: restarted
+    enabled: yes
+
+#####################################################################
+# Setup Graylog Beats input
+#####################################################################
+- name: Check if Beats input exists
+  uri:
+    url: http://127.0.0.1:9000/api/system/inputs
+    user: "{{ SIEM_USERNAME }}"
+    password: "{{ SIEM_PASSWORD }}"
+    force_basic_auth: yes
+    method: GET
+    return_content: yes
+  register: input_list
+
+- name: Create Beats input
+  uri:
+    url: http://127.0.0.1:9000/api/system/inputs
+    user: "{{ SIEM_USERNAME }}"
+    password: "{{ SIEM_PASSWORD }}"
+    force_basic_auth: yes
+    method: POST
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: 201
+    body_format: json
+    body: |
+      {
+        "title": "{{ BEATS_TITLE }}",
+        "type": "{{ BEATS_TYPE }}",
+        "global": true,
+        "configuration": {
+          "recv_buffer_size": 1048576,
+          "tcp_keepalive": false,
+          "number_worker_threads": 4,
+          "tls_client_auth_cert_file": "",
+          "bind_address": "0.0.0.0",
+          "tls_cert_file": "{{ BEATS_TLS_CERT_FILE_PATH }}",
+          "port": {{ BEATS_PORT }},
+          "tls_key_file": "{{ BEATS_TLS_KEY_FILE_PATH }}",
+          "tls_enable": {{ BEATS_TLS_ENABLE }},
+          "tls_key_password": "",
+          "tls_client_auth": "disabled",
+          "override_source": null,
+          "no_beats_prefix": false
+        },
+        "node": null
+      }
+  when: input_list.json.total == 0

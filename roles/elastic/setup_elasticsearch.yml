@@ -31,8 +31,46 @@
     regexp: '^-Xms'
     line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
 
+- name: Enable X-Pack security
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'xpack.security.enabled: true'
+    create: yes
+
+- name: Enable X-Pack security transport SSL
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'xpack.security.transport.ssl.enabled: true'
+    create: yes
+
+- name: Set to single node mode
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'discovery.type: single-node'
+    create: yes
+
 - name: Restart Elasticsearch
   service:
     name: 'elasticsearch'
     state: 'restarted'
     enabled: yes
+
+- name: Generate Elasticsearch passwords
+  shell: "yes | /usr/share/elasticsearch/bin/elasticsearch-setup-passwords -s auto | grep 'PASSWORD'"
+  register: elasticsearch_setup_passwords_output
+
+- name: Write contents of password generation to console
+  debug:
+    msg: "{{ elasticsearch_setup_passwords_output.stdout.split('\n') }}"
+
+- name: Write contents of password generation to /tmp/elasticsearch-setup-passwords.txt
+  copy: 
+    content: "{{ elasticsearch_setup_passwords_output.stdout }}" 
+    dest: /tmp/elasticsearch-setup-passwords.txt
+
+- name: Set fact
+  set_fact:
+    logstash_es_username: 'logstash_system'
+    logstash_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[3].split(' ')[3] }}"
+    kibana_es_username: 'kibana_system'
+    kibana_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[1].split(' ')[3] }}"

@@ -53,7 +53,7 @@ services:
     ports:
       - 9200:9200
     volumes: 
-      - es-data:/usr/share/elasticsearch/data
+      - elastic-es-data:/usr/share/elasticsearch/data
     cpus: 4
     mem_limit: 1GB
 
@@ -79,7 +79,7 @@ services:
       - elasticsearch
 
 volumes: 
-  es-data:
+  elastic-es-data:
 
 networks: 
   elastic-backend:

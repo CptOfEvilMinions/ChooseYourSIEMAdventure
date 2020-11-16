@@ -1,5 +1,9 @@
 # Graylog
 
+## Default password
+<span style="color:red;">Default password is set to `Changem123!`, see instructions in `docs/`</span>
+
+## Elasticseach version
 <span style="color:red;">Graylog v3.X depends on Elasticsearch 6.X</span>. This means the ulimit on Linux hosts needs to be increased.
 
 ## Access Rest API via web browser
@@ -50,6 +54,13 @@
 * [REST API browser (graylog 3.1) not accessible behind nginx reverse proxy](https://community.graylog.org/t/rest-api-browser-graylog-3-1-not-accessible-behind-nginx-reverse-proxy/12851/8)
 * [Wait for an HTTP endpoint to return 200 OK with Bash and curl](https://gist.github.com/rgl/f90ff293d56dbb0a1e0f7e7e89a81f42)
 * [How to check if curl was successful and print a message?](https://stackoverflow.com/questions/38905489/how-to-check-if-curl-was-successful-and-print-a-message)
+* [Install MongoDB Community Edition on Ubuntu](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
+* [apt_repository module does not allow enabling 'universe' repository](https://github.com/ansible/ansible/issues/48714)
+* [Graylog -Ubuntu installation](https://docs.graylog.org/en/3.3/pages/installation/os/ubuntu.html)
+* [How to Install MongoDB on Ubuntu 20.04](https://linuxhint.com/install_mongodb_ubuntu/)
+* [Mongo repo - multiverse](https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/4.2/multiverse/)
+* [Check MongoDB Version in Windows / Linux](https://www.configserverfirewall.com/mongodb/check-mongodb-version/)
+* []()
 * []()
 * []()
 * []()

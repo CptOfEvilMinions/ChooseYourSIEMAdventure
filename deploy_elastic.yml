@@ -7,3 +7,5 @@
     - import_tasks: 'roles/elastic/setup_elasticsearch.yml'
     - import_tasks: 'roles/elastic/setup_kibana.yml'
     - import_tasks: 'roles/logstash/setup_logstash.yml'
+    - import_tasks: 'roles/elastic/setup_nginx.yml'
+    - import_tasks: 'roles/elastic/setup_ufw.yml'

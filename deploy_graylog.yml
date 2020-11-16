@@ -1,0 +1,12 @@
+- hosts: 'graylog'
+  become: yes
+  become_user: root
+  tasks:
+    - include_vars: 'group_vars/graylog.yml'
+    - import_tasks: 'roles/init.yml'
+    - import_tasks: 'roles/graylog/setup_mongo.yml'
+    - import_tasks: 'roles/graylog/setup_elasticsearch.yml'
+    - import_tasks: 'roles/graylog/setup_graylog.yml'
+    - import_tasks: 'roles/graylog/setup_nginx.yml'
+    - import_tasks: 'roles/graylog/setup_ufw.yml'
+    

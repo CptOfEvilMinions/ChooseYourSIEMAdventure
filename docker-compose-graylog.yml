@@ -16,8 +16,8 @@ services:
     ports:
       - 8000:80
       - 8443:443
-    #depends_on: 
-    #  - graylog
+    depends_on: 
+     - graylog
 
   ###################################################### Graylog ######################################################
   graylog:
@@ -45,7 +45,6 @@ services:
     depends_on: 
       - mongo
       - elasticsearch
-      - nginx
     volumes: 
       - graylog-data:/usr/share/graylog/data
     cpus: 4
@@ -64,7 +63,7 @@ services:
     networks: 
       - graylog-backend 
     volumes: 
-      - mongo-db:/data/db
+      - graylog-mongo-db:/data/db
 
   ###################################################### Elasticsearch ######################################################
   elasticsearch:
@@ -86,7 +85,7 @@ services:
     ports:
       - 9200:9200
     volumes: 
-      - es-data:/usr/share/elasticsearch/data
+      - graylog-es-data:/usr/share/elasticsearch/data
     ulimits:
       memlock:
         soft: -1
@@ -98,6 +97,6 @@ networks:
   graylog-backend:
 
 volumes: 
-  es-data:
-  mongo-db:
+  graylog-es-data:
+  graylog-mongo-db:
   graylog-data:

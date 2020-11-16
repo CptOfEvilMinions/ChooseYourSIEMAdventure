@@ -1,5 +1,9 @@
 # Splunk
 
+## Default password
+<span style="color:red;">Default password is set to `Changem123!`, see instructions in `docs/`</span>
+
+
 ## Docker
 
 ## Ansible
@@ -17,7 +21,7 @@
 * [Set up and use HTTP Event Collector from the CLI](https://docs.splunk.com/Documentation/Splunk/7.3.2/Data/UseHECfromtheCLI)
 * [Centos User account nologin but possible to su into account](https://serverfault.com/questions/337362/centos-user-account-nologin-but-possible-to-su-into-account/337379)
 * [How To Install Elasticsearch, Logstash, and Kibana (Elastic Stack) on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-20-04)
-* []()
+* [https://docs.splunk.com/Documentation/Splunk/8.1.0/Admin/GethelpwiththeCLI](https://docs.splunk.com/Documentation/Splunk/8.1.0/Admin/GethelpwiththeCLI)
 * []()
 * []()
 * []()

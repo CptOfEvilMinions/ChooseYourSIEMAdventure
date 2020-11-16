@@ -1,0 +1,36 @@
+#####################################################################
+# Install/Setup Mongo
+#####################################################################
+- name: Enable universe repository
+  apt_repository:
+    repo: "{{ item }}"
+  loop:
+    - "deb http://archive.ubuntu.com/ubuntu/ focal universe"
+    - "deb http://archive.ubuntu.com/ubuntu/ focal-updates universe"
+    - "deb http://security.ubuntu.com/ubuntu/ focal-security universe"
+    
+- name: Install software
+  apt:
+    name: ['apt-transport-https', 'openjdk-8-jre-headless', 'uuid-runtime', 'pwgen']
+    state: latest
+
+- name: Add Mongo GPG key
+  apt_key:
+    url: "{{ MONGO_GPG_URL }}"
+    state: present
+
+- name: Add Mongo repo
+  apt_repository:
+    repo: "{{ MONGO_REPO_URL }}"
+    state: present
+
+- name: Install Mongo
+  apt:
+    name: 'mongodb-org'
+    state: latest
+
+- name: Start Mongo service
+  service:
+    name: 'mongod'
+    state: restarted
+    enabled: yes
