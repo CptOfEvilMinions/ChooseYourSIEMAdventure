@@ -28,7 +28,12 @@ services:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_HEC_TOKEN=${SIEM_PASSWORD}
       - SPLUNK_PASSWORD=${SIEM_PASSWORD}
+      - SPLUNK_ADD=tcp 1514
+    ports: 
+      - 8088:8088
+      - 9997:9997
     networks: 
+      - default
       - splunk-backend
     volumes: 
       - splunk-var:/opt/splunk/var
@@ -42,7 +47,7 @@ services:
     restart: unless-stopped
     build: 
       context: .
-      dockerfile: docker/splunk/dockerfile-logstash
+      dockerfile: docker/splunk/Dockerfile-logstash
       args:
         LOGSTASH_VERSION: ${ELASTIC_VERSION}
         SIEM_PASSWORD: ${SIEM_PASSWORD}

@@ -30,7 +30,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Ansible: Store command's stdout in new variable?](https://stackoverflow.com/questions/36059804/ansible-store-commands-stdout-in-new-variable)
 * [ansible.builtin.lineinfile – Manage lines in text files](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html)
 * [Write variable to a file in Ansible](https://stackoverflow.com/questions/26638180/write-variable-to-a-file-in-ansible)
-* []()
+* [ansible.builtin.uri – Interacts with webservices](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/uri_module.html)
 * []()
 * []()
 
