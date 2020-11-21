@@ -26,7 +26,7 @@
 * [Logstash - tcp output plugin does not send newlines #1650](https://github.com/elastic/logstash/issues/1650)
 * [How to forward events from logstash to Splunk](https://medium.com/ibm-garage/how-to-forward-events-from-logstash-to-splunk-4f2608041feb)
 * [Convert pkcs1 and pkcs8 format RSA private key to each other under linux command line](https://www.programmersought.com/article/8489444974/)
-* [Mutate filter pluginedit](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
+* [Mutate filter plugin](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
 * []()
 * []()
 * []()

@@ -43,8 +43,8 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * []()
 
 ### Python
-* []()
-* []()
+* [stackoverflow- ISO time (ISO 8601) in Python](https://stackoverflow.com/questions/2150739/iso-time-iso-8601-in-python?rq=1)
+* [How to transform a timestamp in ms to datetime format?](https://community.graylog.org/t/how-to-transform-a-timestamp-in-ms-to-datetime-format/4996/4)
 * []()
 * []()
 * []()

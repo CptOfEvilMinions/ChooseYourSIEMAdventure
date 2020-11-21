@@ -1,0 +1,102 @@
+version: "2.2"
+services: 
+  ###################################################### NGINX ######################################################
+  nginx:
+    container_name: 'siem-graylog-nginx'
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile-nginx
+      args: 
+        NGINX_VERSION: ${NGINX_VERSION}
+        SERVICE_CONFIG: docker_graylog.conf
+    networks: 
+      - default
+      - graylog-backend 
+    ports:
+      - 8000:80
+      - 8443:443
+    depends_on: 
+     - graylog
+
+  ###################################################### Graylog ######################################################
+  graylog:
+    build:
+      context: .
+      dockerfile: docker/graylog/Dockerfile-graylog
+      args: 
+        GRAYLOG_VERSION: ${GRAYLOG_VERSION}
+        SIEM_USERNAME: ${SIEM_USERNAME}
+        SIEM_PASSWORD: ${SIEM_PASSWORD}
+    container_name: 'siem-graylog-graylog'
+    restart: unless-stopped
+    environment:
+      # Password is Changeme123!
+      # To change password run: `echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | openssl sha256 | cut -d" " -f1`
+      - GRAYLOG_ROOT_PASSWORD_SHA2=029b4fd16334ffa44e18d81e00de1e95e2467e66d00b4e043674861f6908234f
+      - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://${SIEM_USERNAME}:${SIEM_PASSWORD}@elasticsearch:9200
+      - GRAYLOG_MONGODB_URI=mongodb://${SIEM_USERNAME}:${SIEM_PASSWORD}@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
+    ports:
+      - 5044:5044
+    networks: 
+      - default
+      - graylog-backend 
+    depends_on: 
+      - mongo
+      - elasticsearch
+    volumes: 
+      - graylog-data:/usr/share/graylog/data
+    cpus: 4
+    mem_limit: 1GB
+
+
+  ###################################################### MongoDB ######################################################
+  mongo:
+    image: mongo:4.2
+    container_name: 'siem-graylog-mongo'
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: graylog
+      MONGO_INITDB_ROOT_USERNAME: ${SIEM_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${SIEM_PASSWORD}
+    networks: 
+      - graylog-backend 
+    volumes: 
+      - graylog-mongo-db:/data/db
+
+  ###################################################### Elasticsearch ######################################################
+  elasticsearch:
+    container_name: 'siem-graylog-elasticsearch'
+    restart: unless-stopped
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
+    environment: 
+      - http.host=0.0.0.0
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - ELASTIC_USERNAME=${SIEM_USERNAME}
+      - ELASTIC_PASSWORD=${SIEM_PASSWORD}
+      #- xpack.security.enabled=true
+      #- xpack.security.transport.ssl.enabled=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    networks: 
+      - default
+      - graylog-backend 
+    ports:
+      - 9200:9200
+    volumes: 
+      - graylog-es-data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    cpus: 4
+    mem_limit: 2GB
+
+networks: 
+  graylog-backend:
+
+volumes: 
+  graylog-es-data:
+  graylog-mongo-db:
+  graylog-data:

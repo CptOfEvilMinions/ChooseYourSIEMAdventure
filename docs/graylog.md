@@ -60,7 +60,7 @@
 * [How to Install MongoDB on Ubuntu 20.04](https://linuxhint.com/install_mongodb_ubuntu/)
 * [Mongo repo - multiverse](https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/4.2/multiverse/)
 * [Check MongoDB Version in Windows / Linux](https://www.configserverfirewall.com/mongodb/check-mongodb-version/)
-* []()
+* [Install Elasticsearch v7.10.0 with Docker](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html)
 * []()
 * []()
 * []()

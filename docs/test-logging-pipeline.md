@@ -1,7 +1,7 @@
 # Test Logging Pipeline
 
-1. `pip3 install 
-
+1. `pip3 install pylogbeat`
+1. `ipython`
 
 ```python
 from datetime import datetime
