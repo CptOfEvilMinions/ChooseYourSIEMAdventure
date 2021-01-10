@@ -32,7 +32,7 @@
     state: latest
 
 - name: Covert password to sha256 hash
-  shell: "echo -n {{ SIEM_PASSWORD }} | sha256sum | awk '{print $1}'"
+  shell: "echo -n {{ siem_password }} | sha256sum | awk '{print $1}'"
   register: pass_contents
 
 - name: Set admin password
@@ -60,18 +60,21 @@
 - name: Check if Beats input exists
   uri:
     url: http://127.0.0.1:9000/api/system/inputs
-    user: "{{ SIEM_USERNAME }}"
-    password: "{{ SIEM_PASSWORD }}"
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
     force_basic_auth: yes
     method: GET
     return_content: yes
   register: input_list
+  until: input_list.status == 200
+  retries: 100
+  delay: 1
 
 - name: Create Beats input
   uri:
     url: http://127.0.0.1:9000/api/system/inputs
-    user: "{{ SIEM_USERNAME }}"
-    password: "{{ SIEM_PASSWORD }}"
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
     force_basic_auth: yes
     method: POST
     headers:

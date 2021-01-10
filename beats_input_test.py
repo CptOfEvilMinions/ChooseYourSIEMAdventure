@@ -14,7 +14,9 @@ def send_log(host, port, message):
     "message": "foo bar",
     "pid": 65534,
     "program": "example.py",
-    "type": "python-logstash"
+    "service": {
+      "type": "python-logstash"
+    }
   }
   
   # Create connector

@@ -1,2 +1,4 @@
 conf/tls/*
+!conf/tls/tls.conf
 example_1.json
+venv/

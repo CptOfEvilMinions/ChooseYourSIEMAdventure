@@ -1,5 +1,7 @@
 ###################################################### Elastic ######################################################
-HOSTNAME: 'elastic'
-ELASTIC_VERSION: '7.9.0'
-ELASTIC_GPG_URL: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
-ELASTIC_REPO_URL: 'deb https://artifacts.elastic.co/packages/7.x/apt stable main'
+hostname: 'elastic'
+
+elastic_version: 7.10.0
+elastic_repo_version: '7.x'
+elastic_gpg_url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+elastic_repo_url: 'deb https://artifacts.elastic.co/packages/{{ elastic_repo_version }}/apt stable main'

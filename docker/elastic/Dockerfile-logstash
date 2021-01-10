@@ -1,20 +1,30 @@
 ARG ELASTIC_VERSION
-FROM logstash:${ELASTIC_VERSION}
+FROM docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
 ARG SIEM_USERNAME
 ARG SIEM_PASSWORD
 
-# Copy certs
-COPY conf/tls/*.crt /usr/share/logstash/tls/logstash.crt
-COPY conf/tls/*.key /usr/share/logstash/tls/logstash.key
+ARG SIEM_ENV
+ARG OUTPUT_CONFIG
 
-# Copy logstash.yml
-RUN rm -rf /usr/share/logstash/pipeline/logstash.conf
-COPY conf/docker/logstash/logstash_docker.yml /usr/share/logstash/config/logstash.yml
+# Instal Logstash plugins
+RUN logstash-plugin install logstash-filter-json_encode
+
+# Copy TLS cert and private key
+COPY conf/tls/*.crt /etc/pki/tls/certs/logstash.crt
+COPY conf/tls/*.key /etc/pki/tls/private/logstash.key
+
+# Set TLS cert and private key perms
+USER root
+RUN chown logstash /etc/pki/tls/certs/logstash.crt && chown logstash /etc/pki/tls/private/logstash.key
+RUN chmod 644 /etc/pki/tls/certs/logstash.crt && chmod 400 /etc/pki/tls/private/logstash.key
+USER logstash
 
 # Copy pipeline configs
-COPY conf/docker/logstash/pipeline/ /usr/share/logstash/pipeline
-COPY conf/docker/logstash/30-output-elasticsearch.conf /usr/share/logstash/pipeline/30-output-elasticsearch.conf
+RUN rm /usr/share/logstash/pipeline/logstash.conf
+COPY conf/docker/elastic/logstash/pipeline/ /usr/share/logstash/pipeline
 
 # Set elasticsearch password
-RUN sed -i "s/x-pack-test-username/\"${SIEM_USERNAME}\"/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf
-RUN sed -i "s/x-pack-test-password/\"${SIEM_PASSWORD}\"/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf
+RUN if [ "$SIEM_ENV" == "elastic" ]; then \
+    sed -i "s/{{ x-pack-test-username }}/\"${SIEM_USERNAME}\"/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf && \ 
+    sed -i "s/{{ x-pack-test-password }}/\"${SIEM_PASSWORD}\"/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf ; \
+  fi

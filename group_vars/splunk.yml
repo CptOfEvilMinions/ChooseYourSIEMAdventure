@@ -2,12 +2,10 @@
 SPLUNK_VERSION: '8.0.7'
 HOSTNAME: 'splunk'
 
-SPLUNK_HEC_NAME: 'logstash-token'
-SPLUNK_HEC_INDEX: 'main'
-
-ELASTIC_VERSION: '7.x'
+ELASTIC_VERSION: 7.10.0
+ELASTIC_REPO_VERSION: '7.x'
 ELASTIC_GPG_URL: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
-ELASTIC_REPO_URL: 'deb https://artifacts.elastic.co/packages/{{ ELASTIC_VERSION }}/apt stable main'
+ELASTIC_REPO_URL: 'deb https://artifacts.elastic.co/packages/{{ ELASTIC_REPO_VERSION }}/apt stable main'
 
 # https://www.splunk.com/en_us/download/splunk-enterprise.html
 SPLUNK_DL_URL: 'https://www.splunk.com/bin/splunk/DownloadActivityServlet?architecture=x86_64&platform=linux&version={{ SPLUNK_VERSION }}&product=splunk&filename=splunk-{{ SPLUNK_VERSION }}-cbe73339abca-linux-2.6-amd64.deb&wget=true'

@@ -1,0 +1,206 @@
+####################################################################
+# Install/Setup Logstash
+####################################################################
+- name: Add Elastic GPG key
+  apt_key:
+    url: "{{ elastic_gpg_url }}"
+    state: present
+
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ elastic_repo_url }}"
+    state: present
+
+- name: Install Logstash
+  apt:
+    name: 'logstash=1:{{ elastic_version }}-1'
+    state: present
+
+- name: Install Logstash plugins
+  shell: '/usr/share/logstash/bin/logstash-plugin install {{ item }}'
+  with_items:
+    - 'logstash-filter-json_encode'
+
+####################################################################
+# Copy TLS private key and cert
+####################################################################
+- name: Create Logstash TLS directory
+  file:
+    path: '/etc/logstash/tls'
+    state: directory
+    owner: logstash
+    group: logstash
+
+- name: Copy TLS cert
+  template:
+    src: "conf/tls/tls.crt"
+    dest: "/etc/logstash/tls/logstash.crt"
+    owner: logstash
+    group: logstash
+    mode: 0644
+
+- name: Copy TLS private key
+  template:
+    src: "conf/tls/tls.key"
+    dest: "/etc/logstash/tls/logstash.key"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+####################################################################
+# Create logstash_writer user and role
+####################################################################
+- name: Read elastic user credentials
+  shell: "cat /tmp/elasticsearch-setup-passwords.txt"
+  register: elasticsearch_setup_passwords_output
+
+- name: Set elastic user credentials
+  set_fact:
+    elastic_es_username: 'elastic'
+    elastic_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[6].split(' ')[3] }}"
+  when: elastic_es_username is undefined or elastic_es_password is undefined
+
+- name: Get list of Elastic roles
+  uri:
+    url: http://localhost:9200/_security/role
+    method: GET
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    status_code: 200
+  register: _result
+
+- name: Create logstash_writer role
+  uri:
+    url: http://localhost:9200/_xpack/security/role/logstash_writer
+    method: POST
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "cluster": ["manage_index_templates", "monitor", "manage_ilm"], 
+        "indices": [
+        {
+          "names": [ "*-*" ], 
+          "privileges": ["write","create","delete","create_index","manage","manage_ilm"]  
+        }
+        ]
+      }
+    status_code: 200
+  when: _result.json.logstash_writer is undefined
+
+- name: Check if password exists in /tmp
+  debug:
+    msg: "helllo2222"
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: Set logstash_writer user credentials
+  set_fact:
+    logstash_writer_username: 'logstash_writer'
+    logstash_writer_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[7].split(' ')[3] }}"
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is defined
+
+- name: Create logstash_writer user credentials
+  set_fact:
+    logstash_writer_username: 'logstash_writer'
+    logstash_writer_password: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=15') }}"
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: Check if logstash_writer user exists
+  uri:
+    url: http://localhost:9200/_security/user
+    method: GET
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    status_code: 200
+  register: _result
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: Create logstash_writer user
+  uri:
+    url: 'http://localhost:9200/_security/user/{{ logstash_writer_username }}'
+    method: POST
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "password" : "{{ logstash_writer_password }}",
+        "roles" : [ "logstash_writer" ],
+        "full_name" : "Logstash writer",
+        "email" : "logstash_writer@{{ base_domain }}"
+      }
+    status_code: 200
+  when: _result.json.logstash_writer is undefined
+
+- name: Write username and password to file 
+  lineinfile:
+    path: /tmp/elasticsearch-setup-passwords.txt
+    line: 'PASSWORD {{ logstash_writer_username }} = {{ logstash_writer_password }}'
+    create: yes
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: PRINT credentials
+  debug:
+    msg: 'PASSWORD {{ logstash_writer_username }} = {{ logstash_writer_password }}'
+
+
+####################################################################
+# Copy Logstash pipeline
+####################################################################
+- name: Copy Logstash pipeline
+  template:
+    src: "{{ item }}"
+    dest: "/etc/logstash/conf.d/{{ item | basename }}"
+    owner: logstash
+    group: logstash
+    mode: 0400
+  with_fileglob:
+    - conf/docker/elastic/logstash/pipeline/*.conf
+
+- name: Copy Logstash input config
+  template:
+    src: "conf/ansible/elastic/02-input-beats.conf"
+    dest: "/etc/logstash/conf.d/02-input-beats.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+- name: Copy Logstash output config
+  template:
+    src: "conf/ansible/elastic/30-output-elasticsearch.conf"
+    dest: "/etc/logstash/conf.d/30-output-elasticsearch.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+####################################################################
+# Restart service
+####################################################################
+- name: Restart Logstash
+  service:
+    name: logstash
+    enabled: yes
+    state: restarted
+
+- name: Logstash healthcheck
+  uri:
+    url: "http://127.0.0.1:9600"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

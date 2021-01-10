@@ -28,7 +28,7 @@
   register: ldap_config
 
 - name: Add Splunk on startup, accept license, enter password
-  shell: /opt/splunk/bin/splunk enable boot-start --accept-license --answer-yes --no-prompt --seed-passwd {{ SIEM_PASSWORD }}
+  shell: /opt/splunk/bin/splunk enable boot-start --accept-license --answer-yes --no-prompt --seed-passwd {{ siem_password }}
   when: not ldap_config.stat.exists
 
 - name: Set Splunk to listen on localhost

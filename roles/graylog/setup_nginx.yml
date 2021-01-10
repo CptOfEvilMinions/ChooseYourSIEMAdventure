@@ -34,7 +34,7 @@
 - name: Copy Self-signed public cert for Graylog
   template:
     src: 'conf/tls/docker.key'
-    dest: '/etc/ssl/private/{{ HOSTNAME }}.key'
+    dest: '/etc/ssl/private/{{ hostname }}.key'
     owner: 'root'
     group: 'root'
     mode: 0400
@@ -42,7 +42,7 @@
 - name: Copy Self-signed private key for Graylog
   template:
     src: 'conf/tls/docker.crt'
-    dest: '/etc/ssl/certs/{{ HOSTNAME }}.crt'
+    dest: '/etc/ssl/certs/{{ hostname }}.crt'
     owner: 'root'
     group: 'root'
     mode: 0644

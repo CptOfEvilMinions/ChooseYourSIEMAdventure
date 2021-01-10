@@ -1,20 +1,32 @@
 # Test Logging Pipeline
 
-1. `pip3 install pylogbeat`
-1. `ipython`
+## Run test script
+1. `virtualenv -p python3 venv`
+1. `source venv/bin/activate`
+1. `pip3 install -r requirements.txt`
+1. `python3 beats_input_test.py --host <SIEM host> -p <Beats input port - default 5044>`
 
-```python
-from datetime import datetime
-from pylogbeat import PyLogBeatClient
+## Check results on Graylog
+1. Log into Graylog
+1. System > inputs
+1. Select "Show received messages" 
+  1. ![graylog_beats_input_check](../.img/graylog_beats_input_check.png)
 
-client = PyLogBeatClient('<IP addr>', 5044, ssl_enable=True, ssl_verify=False)
+## Check results on Elastic
+1. Log into Kibana
+1. Stack Management > Kibana > Index patterns
+  1. Select "Create index pattern"
+  1. Enter `python-logstash-*` for index pattern name
+  1. Create index pattern
+1. Go to `python-logstash` index
+  1. ![elastic_beats_input_check](../.img/elastic_beats_input_check.png)
 
-message = {'@timestamp': datetime.now().timestamp(),  '@version': '1', '_type': 'test', 'message': 'hello world55555555555555'}
+## Check results on Splunk
+1. Log into Splunk
+1. Search & Reporting
+1. Enter query: `index="main"`
+  1. ![splunk_beats_input_check](../.img/splunk_beats_input_check.png)
 
-client.connect()
-client.send([message])
-client.close()
-```
 
 ## References
 * [How To Get Current Timestamp In Python](https://timestamp.online/article/how-to-get-current-timestamp-in-python)

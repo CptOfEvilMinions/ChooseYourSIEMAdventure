@@ -3,7 +3,18 @@
 ################################################################################
 - name: Install Kibana
   apt:
-    name: 'kibana={{ ELASTIC_VERSION }}'
+    name: 'kibana={{ elastic_version }}'
+
+- name: Read Kibana secrets
+  shell: "cat /tmp/elasticsearch-setup-passwords.txt"
+  register: elasticsearch_setup_passwords_output
+  when: kibana_es_username is undefined or kibana_es_password is undefined
+
+- name: Set Kibana secrets
+  set_fact:
+    kibana_es_username: 'kibana_system'
+    kibana_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[1].split(' ')[3] }}"
+  when: kibana_es_username is undefined or kibana_es_password is undefined
 
 - name: Set Kibana username for Elasticsearch
   lineinfile:
@@ -22,3 +33,15 @@
     name: 'kibana'
     state: 'restarted'
     enabled: yes
+
+- name: Kibana healthcheck
+  uri:
+    url: "http://127.0.0.1:5601/login?next=%2Fstatus"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

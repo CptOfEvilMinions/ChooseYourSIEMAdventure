@@ -3,7 +3,7 @@
 #####################################################################
 - name: Add Elastic GPG key
   apt_key:
-    url: "{{ ELASTIC_GPG_URL }}"
+    url: "{{ elastic_gpg_url }}"
     state: present 
     
 - name: Add Elastic repo
@@ -13,7 +13,7 @@
 
 - name: Install Elastic
   apt:
-    name: '{{ ELASTIC_VERSION }}'
+    name: '{{ elastic_version }}'
     state: latest
 
 - name: Specify ES cluster name

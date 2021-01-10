@@ -1,0 +1,16 @@
+#####################################################################
+# Create Splunk Syslog input
+#####################################################################
+- name: Copy Syslog input config
+  template:
+    src: 'conf/ansible/splunk/local_syslog_input.conf'
+    dest: '/opt/splunk/etc/system/local/inputs.conf'
+    owner: 'root'
+    group: 'root'
+    mode: 0600
+
+- name: Restart Splunk service
+  service:
+    name: 'splunk'
+    enabled: yes
+    state: restarted
