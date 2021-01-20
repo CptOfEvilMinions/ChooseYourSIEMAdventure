@@ -100,8 +100,8 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Cluster health API](https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html)
 * [Elastic - Create or update users API - Request body](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-put-user.html#security-api-put-user-request-body)
 * [Elastic - Configuring Logstash to use Basic Authentication](https://www.elastic.co/guide/en/logstash/current/ls-security.html#ls-http-auth-basic)
-* []()
-* []()
+* [Logstash - Mutate filter plugin](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html#plugins-filters-mutate-lowercase)
+* [If/else within Logstash output plugin](https://discuss.elastic.co/t/if-else-within-logstash-output-plugin/185965)
 * []()
 * []()
 

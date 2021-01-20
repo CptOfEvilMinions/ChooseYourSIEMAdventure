@@ -25,6 +25,10 @@ COPY conf/logstash_filters/ /usr/share/logstash/pipeline
 COPY conf/docker/elastic/02-input-beats.conf /usr/share/logstash/pipeline/02-input-beats.conf
 COPY conf/docker/elastic/30-output-elasticsearch.conf /usr/share/logstash/pipeline/30-output-elasticsearch.conf
 
+# Configure /usr/share/logstash/config/logstash.yml
+RUN echo "xpack.monitoring.elasticsearch.username: \"${SIEM_USERNAME}\"" >> /usr/share/logstash/config/logstash.yml
+RUN echo "xpack.monitoring.elasticsearch.password: \"${SIEM_PASSWORD}\"" >> /usr/share/logstash/config/logstash.yml
+
 # Set elasticsearch password
 RUN sed -i "s/{{ SIEM_USERNAME }}/${SIEM_USERNAME}/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf 
 RUN sed -i "s/{{ SIEM_PASSWORD }}/${SIEM_PASSWORD}/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf

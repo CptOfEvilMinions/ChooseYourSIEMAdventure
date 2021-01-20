@@ -188,7 +188,10 @@ filebeat.config.modules:
 # ------------------------------ Logstash Output -------------------------------
 output.logstash:
   # The Logstash hosts
-  hosts: ["{{ logstash_ip_addr }}:{{ logstash_port}}"]
+  hosts: ["{{ logstash_ip_addr }}:{{ logstash_port }}"]
+
+  # Enable SSL
+  ssl.enabled: true
 
   # Disable verification due to self-signed cert
   ssl.verification_mode: none
