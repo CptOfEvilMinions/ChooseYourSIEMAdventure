@@ -1,0 +1,173 @@
+version: "3.9"
+services: 
+  ###################################################### NGINX ######################################################
+  nginx:
+    image: nginx:1.19.6-alpine
+    configs:
+      - source: nginx-conf
+        target: /etc/nginx/nginx.conf
+      - source: nginx-kibana-conf
+        target: /etc/nginx/conf.d/kibana.conf
+    secrets:
+      - source: nginx-tls-cert
+        target: /etc/ssl/certs/nginx.crt
+      - source: nginx-tls-key
+        target: /etc/ssl/private/nginx.key
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 8000:80
+      - 8443:443
+    depends_on: 
+      - kibana
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+  ###################################################### Kibana ######################################################
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.0
+    environment:
+      - SERVER_NAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - MONITORING_ENABLED=false
+      - LOGGING_QUIET=true
+    networks: 
+      - elastic-backend 
+    depends_on: 
+      - elasticsearch
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+  ###################################################### Elasticsearch ######################################################
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment: 
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 9200:9200
+    volumes: 
+      - elastic-es-data:/usr/share/elasticsearch/data
+      - elastic-es-config:/usr/share/elasticsearch/config
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 300M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+  ###################################################### Logstash ######################################################
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.0
+    configs:
+      #### inputs ####
+      - source: logstash-input-conf
+        target: /usr/share/logstash/pipeline/logstash.conf
+      #### filters ####
+      - source: logstash-filter-zeek-conf
+        target: /usr/share/logstash/pipeline/10-filter-zeek.conf
+      - source: logstash-filter-sysmon-conf
+        target: /usr/share/logstash/pipeline/11-filter-sysmon.conf
+      - source: logstash-filter-osquery-conf
+        target: /usr/share/logstash/pipeline/13-filter-osquery.conf
+      #### outputs ####
+      - source: logstas-output-elasticsearch-conf
+        target: /usr/share/logstash/pipeline/30-output-elasticsearch.conf 
+    secrets:
+      - source: nginx-tls-cert
+        target: /etc/pki/tls/certs/logstash.crt
+        uid: '1000'
+        gid: '1000'
+        mode: 0644
+      - source: nginx-tls-key
+        target: /etc/pki/tls/private/logstash.key
+        uid: '1000'
+        gid: '1000'
+        mode: 0400
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 5044:5044
+    depends_on: 
+     - elasticsearch
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+volumes: 
+  elastic-es-data:
+  elastic-es-config:
+
+networks: 
+  elastic-backend:
+
+configs:
+  nginx-conf:
+    file: ./conf/docker/nginx/nginx.conf
+  nginx-kibana-conf:
+    file: ./conf/docker/nginx/kibana.conf
+  logstash-input-conf:
+    file: ./conf/docker/elastic/02-input-beats.conf
+  logstash-filter-zeek-conf:
+    file: ./conf/logstash_filters/10-filter-zeek.conf
+  logstash-filter-sysmon-conf:
+    file: ./conf/logstash_filters/11-filter-sysmon.conf
+  logstash-filter-osquery-conf:
+    file: ./conf/logstash_filters/13-filter-osquery.conf
+  logstas-output-elasticsearch-conf:
+    file: ./conf/docker/elastic/30-output-elasticsearch_docker_swarm.conf
+
+secrets:
+  nginx-tls-cert:
+    file: ./conf/tls/tls.crt
+  nginx-tls-key:
+    file: ./conf/tls/tls.key

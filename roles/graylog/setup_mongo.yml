@@ -1,14 +1,6 @@
 #####################################################################
 # Install/Setup Mongo
 #####################################################################
-- name: Enable universe repository
-  apt_repository:
-    repo: "{{ item }}"
-  loop:
-    - "deb http://archive.ubuntu.com/ubuntu/ focal universe"
-    - "deb http://archive.ubuntu.com/ubuntu/ focal-updates universe"
-    - "deb http://security.ubuntu.com/ubuntu/ focal-security universe"
-    
 - name: Install software
   apt:
     name: ['apt-transport-https', 'openjdk-8-jre-headless', 'uuid-runtime', 'pwgen']
@@ -16,21 +8,64 @@
 
 - name: Add Mongo GPG key
   apt_key:
-    url: "{{ MONGO_GPG_URL }}"
+    url: "{{ mongo_gpg_url }}"
     state: present
 
 - name: Add Mongo repo
   apt_repository:
-    repo: "{{ MONGO_REPO_URL }}"
+    repo: "{{ mongo_repo_url }}"
     state: present
 
 - name: Install Mongo
   apt:
     name: 'mongodb-org'
-    state: latest
+    state: present
 
 - name: Start Mongo service
   service:
     name: 'mongod'
     state: restarted
     enabled: yes
+
+- name: Mongo healthcheck
+  shell: echo 'db.runCommand("ping").ok' | mongo 127.0.0.1:27017/test --quiet
+  register: _result
+  until: _result.stdout == "1"
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
+
+#####################################################################
+# Create Mongo user and database for Graylog
+#####################################################################
+- name: Install Python3 pip
+  apt:
+    name: ['python3-pip']
+    state: latest
+
+- name: Install PyMongo
+  pip:
+    name: pymongo
+
+- name: Create mongo admin user
+  mongodb_user:
+    database: admin
+    name: "{{ mongo_admin_username }}"
+    password: "{{ mongo_admin_password }}"
+    state: present
+    roles: root
+
+- name: Create Mongo user and database for Graylog
+  community.mongodb.mongodb_user:
+    login_user: '{{ mongo_admin_username }}'
+    login_password: '{{ mongo_admin_password }}'
+    database: '{{ mongo_graylog_db_name }}'
+    name: '{{ mongo_graylog_username }}'
+    password: '{{ mongo_graylog_password }}'
+    state: present
+
+- name: Mongo user check
+  shell: echo 'db.runCommand("ping").ok' | mongo -u {{ mongo_graylog_username }} -p {{ mongo_graylog_password }} 127.0.0.1:27017/{{ mongo_graylog_db_name }} --quiet
+  register: _result
+  until: _result.stdout == "1"
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

@@ -1,8 +1,18 @@
 #!/bin/bash
-
-SIEM_USERNAME=graylog-test-user
-SIEM_PASSWORD=graylog-test-password
+SIEM_USERNAME="graylog-test-user"
+SIEM_PASSWORD="graylog-test-password"
 GRAYLOG_URL=http://127.0.0.1:9000
+
+# Docker Swarm read in input
+if [ ${SIEM_USERNAME} == "graylog-test-user" ] && [ ${SIEM_PASSWORD} == "graylog-test-password" ]
+then
+  echo -n "Enter Graylog admin username: "
+  read SIEM_USERNAME
+  echo -e "\n"
+  echo -n "Enter Graylog admin password: "
+  read -s SIEM_PASSWORD
+  echo -e "\n"
+fi
 
 ### UNTIL ###
 while [[ "$(curl -s -k -u ${SIEM_USERNAME}:${SIEM_PASSWORD} -H 'Content-Type: application/json' -X GET ${GRAYLOG_URL}/api/system/inputs -o /dev/null -w ''%{http_code}'')" != "200" ]]; do sleep 5; done

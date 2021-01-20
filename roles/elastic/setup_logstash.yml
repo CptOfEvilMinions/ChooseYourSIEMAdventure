@@ -158,16 +158,6 @@
 ####################################################################
 # Copy Logstash pipeline
 ####################################################################
-- name: Copy Logstash pipeline
-  template:
-    src: "{{ item }}"
-    dest: "/etc/logstash/conf.d/{{ item | basename }}"
-    owner: logstash
-    group: logstash
-    mode: 0400
-  with_fileglob:
-    - conf/docker/elastic/logstash/pipeline/*.conf
-
 - name: Copy Logstash input config
   template:
     src: "conf/ansible/elastic/02-input-beats.conf"
@@ -175,6 +165,16 @@
     owner: logstash
     group: logstash
     mode: 0400
+
+- name: Copy Logstash filters
+  template:
+    src: "{{ item }}"
+    dest: "/etc/logstash/conf.d/{{ item | basename }}"
+    owner: logstash
+    group: logstash
+    mode: 0400
+  with_fileglob:
+    - conf/logstash_filters/*.conf
 
 - name: Copy Logstash output config
   template:

@@ -18,6 +18,8 @@ services:
       - 8443:443
     depends_on: 
       - kibana
+    cpus: 1
+    mem_limit: 50M  
 
   ###################################################### Kibana ######################################################
   kibana:
@@ -35,6 +37,8 @@ services:
       - elastic-backend 
     depends_on: 
       - elasticsearch
+    cpus: 2
+    mem_limit: 1G
 
   ###################################################### Elasticsearch ######################################################
   elasticsearch:
@@ -60,7 +64,7 @@ services:
     volumes: 
       - elastic-es-data:/usr/share/elasticsearch/data
     cpus: 4
-    mem_limit: 1GB
+    mem_limit: 1G
 
   ###################################################### Logstash ######################################################
   logstash:
@@ -81,7 +85,7 @@ services:
     ports:
       - 5044:5044
     cpus: 4
-    mem_limit: 1GB
+    mem_limit: 1G
     depends_on: 
      - elasticsearch
 

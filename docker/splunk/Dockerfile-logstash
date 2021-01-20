@@ -1,10 +1,5 @@
 ARG ELASTIC_VERSION
 FROM docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
-ARG SIEM_USERNAME
-ARG SIEM_PASSWORD
-
-ARG SIEM_ENV
-ARG OUTPUT_CONFIG
 
 # Instal Logstash plugins
 RUN logstash-plugin install logstash-filter-json_encode
@@ -22,9 +17,5 @@ USER logstash
 # Copy pipeline configs
 RUN rm /usr/share/logstash/pipeline/logstash.conf
 COPY conf/logstash_filters/ /usr/share/logstash/pipeline
-COPY conf/docker/elastic/02-input-beats.conf /usr/share/logstash/pipeline/02-input-beats.conf
-COPY conf/docker/elastic/30-output-elasticsearch.conf /usr/share/logstash/pipeline/30-output-elasticsearch.conf
-
-# Set elasticsearch password
-RUN sed -i "s/{{ SIEM_USERNAME }}/${SIEM_USERNAME}/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf 
-RUN sed -i "s/{{ SIEM_PASSWORD }}/${SIEM_PASSWORD}/g" /usr/share/logstash/pipeline/30-output-elasticsearch.conf
+COPY conf/docker/splunk/02-input-beats.conf /usr/share/logstash/pipeline/02-input-beats.conf
+COPY conf/docker/splunk/30-output-splunk-syslog.conf /usr/share/logstash/pipeline/30-output-splunk-syslog.conf

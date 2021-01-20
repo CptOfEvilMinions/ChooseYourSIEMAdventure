@@ -7,5 +7,5 @@
     - import_tasks: 'roles/splunk/setup_splunk.yml'
     - import_tasks: 'roles/splunk/setup_nginx.yml'
     - import_tasks: 'roles/splunk/setup_splunk_syslog_input.yml'
-    - import_tasks: 'roles/logstash/setup_logstash.yml'
+    #- import_tasks: 'roles/logstash/setup_logstash.yml'
     - import_tasks: 'roles/splunk/setup_ufw.yml'

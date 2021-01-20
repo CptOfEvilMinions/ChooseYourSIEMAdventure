@@ -8,6 +8,10 @@ Repo of configs for the three major SIEMs.
 ## Default credentials
 <span style="color:red;">Default password is set to `Changem123!` or the value of `SIEM_PASSWORD` in `.env`, see instructions in `docs/`</span>
 
+## Config direcotry: `conf/`
+* `conf/ansible` - This directory contains all the configs for the Ansible playbooks and a manual install
+* `conf/docker` - This directory contains all the configs for Docker
+
 ## Generate public cert and private key
 1. `openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout conf/tls/docker.key -out conf/tls/docker.crt`
 
@@ -15,7 +19,7 @@ Repo of configs for the three major SIEMs.
 The Ansible playbooks will automatically set the heap size to half of total system memory allocated to a host. For example, if a machine has `16GB` of memory, the ES heap size will be set to `8GB`.
 
 ## Supported versions
-* `Graylog v4.0.0`
+* `Graylog v4.0.1`
 * `Elastic v7.10`
 * `Splunk v7.0.8`
 * `Ansible v2.11+`
@@ -136,6 +140,24 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Mongo repo - multiverse](https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/4.2/multiverse/)
 * [Check MongoDB Version in Windows / Linux](https://www.configserverfirewall.com/mongodb/check-mongodb-version/)
 * [Install Elasticsearch v7.10.0 with Docker](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html)
+* [Echo newline in Bash prints literal \n](https://stackoverflow.com/questions/8467424/echo-newline-in-bash-prints-literal-n)
+* [Linux script to prompt for password](https://www.cyberciti.biz/faq/linux-script-to-prompt-for-password/)
+* [BASH Programming - How to compare strings in Bash](https://linuxhint.com/compare_strings_bash/)
+* [Why does the docker-compose healthcheck of my mongo container always fail?](https://stackoverflow.com/questions/54384042/why-does-the-docker-compose-healthcheck-of-my-mongo-container-always-fail)
+* [ansible.builtin.pip – Manages Python library dependencies](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/pip_module.html)
+* [community.mongodb.mongodb_user – Adds or removes a user from a MongoDB database](https://docs.ansible.com/ansible/latest/collections/community/mongodb/mongodb_user_module.html)
+* [Localhost exception in MongoDB](https://dba.stackexchange.com/questions/184696/localhost-exception-in-mongodb)
+* [StackOverFLow - I cannot login to mongodb after adding admin user and enabling authentication with ansible](https://stackoverflow.com/questions/56119867/i-cannot-login-to-mongodb-after-adding-admin-user-and-enabling-authentication-wi)
+* [Only check whether a line present in a file (ansible)](https://stackoverflow.com/questions/30786263/only-check-whether-a-line-present-in-a-file-ansible/30788277)
+* [Ansible - Using filters to manipulate data](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html)
+* [ansible.builtin.password – retrieve or generate a random password, stored in a file](https://docs.ansible.com/ansible/devel/collections/ansible/builtin/password_lookup.html)
+* [ElasticSearch crashing due to auto_create_index problem](https://community.graylog.org/t/elasticsearch-crashing-due-to-auto-create-index-problem/12600)
+* [Elasticsearch - Create or update roles API](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-put-role.html)
+* [Elasticsearch - [security_exception] action [indices:data/read/search] is unauthorized for user [user]](https://discuss.elastic.co/t/security-exception-action-indices-data-read-search-is-unauthorized-for-user-user/164848/3)
+* []()
+* []()
+* []()
+
 
 ### Splunk
 * [Dockerhub - splunk/splunk](https://hub.docker.com/r/splunk/splunk/tags)
@@ -155,7 +177,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Convert pkcs1 and pkcs8 format RSA private key to each other under linux command line](https://www.programmersought.com/article/8489444974/)
 * [Mutate filter plugin](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
 * [Splunk Add-on for NetApp Data ONTAP](https://docs.splunk.com/Documentation/AddOns/released/NetApp/Configureinputs)
-* []()
+* [Github issue - Not able to disable XPack from Docker Compose #127](https://github.com/elastic/elasticsearch-docker/issues/127)
 * []()
 * []()
 * []()

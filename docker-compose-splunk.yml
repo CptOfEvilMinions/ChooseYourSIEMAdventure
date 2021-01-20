@@ -51,9 +51,6 @@ services:
       dockerfile: docker/Dockerfile-logstash
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION} 
-        SIEM_PASSWORD: ${SIEM_PASSWORD}
-        OUTPUT_CONFIG: 'conf/docker/splunk/30-output-splunk.conf'
-        SIEM_ENV: 'splunk'
     ports: 
       - 5044:5044
     networks: 

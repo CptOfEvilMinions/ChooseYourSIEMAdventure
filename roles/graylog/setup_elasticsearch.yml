@@ -4,17 +4,51 @@
 - name: Add Elastic GPG key
   apt_key:
     url: "{{ elastic_gpg_url }}"
-    state: present 
-    
-- name: Add Elastic repo
-  apt_repository:
-    repo: "{{ ELASTIC_REPO_URL }}"
     state: present
 
-- name: Install Elastic
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ elastic_repo_url }}"
+    state: present
+
+- name: Install Elasticsearch
   apt:
-    name: '{{ elastic_version }}'
-    state: latest
+    name: 'elasticsearch={{ elastic_version }}'
+    state: present
+
+- name: Calculate half the memory of the VM
+  debug:
+    msg: '{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Setting the initial size of the total heapsize for Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: '^-Xmx'
+    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Setting the maximum size of the total heapsize for Elasticsearch
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: '^-Xms'
+    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+
+- name: Enable X-Pack security
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'xpack.security.enabled: true'
+    create: yes
+
+- name: Enable X-Pack security transport SSL
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'xpack.security.transport.ssl.enabled: true'
+    create: yes
+
+- name: Set to single node mode
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'discovery.type: single-node'
+    create: yes
 
 - name: Specify ES cluster name
   lineinfile:
@@ -26,19 +60,7 @@
   lineinfile:
     path: /etc/elasticsearch/elasticsearch.yml
     regexp: '^action.auto_create_index:'
-    line: 'action.auto_create_index: false'
-
-- name: Setting the initial size of the toal heapsize for Elasticsearch
-  lineinfile:
-    path: /etc/elasticsearch/jvm.options
-    regexp: '^-Xmx'
-    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
-
-- name: Setting the maximum size of the toal heapsize for Elasticsearch
-  lineinfile:
-    path: /etc/elasticsearch/jvm.options
-    regexp: '^-Xms'
-    line: '-Xmx{{ ((ansible_memtotal_mb/2000) | round | int)  }}G'
+    line: 'action.auto_create_index: .watches,.triggered_watches,.watcher-history-*'
 
 - name: Start Elastic service
   service:
@@ -46,3 +68,53 @@
     state: restarted
     enabled: yes
 
+####################################################################
+# Generate Elasticsearch passwords
+####################################################################
+- name: Temporary Elasticsearch passwords
+  stat:
+    path: '/tmp/elasticsearch-setup-passwords.txt'
+  register: elasticsearch_temp_passwords_file
+
+- name: Generate Elasticsearch passwords
+  shell: "yes | /usr/share/elasticsearch/bin/elasticsearch-setup-passwords -s auto | grep 'PASSWORD'"
+  register: elasticsearch_setup_passwords_output
+  when: not elasticsearch_temp_passwords_file.stat.exists
+
+- name: Write contents of password generation to /tmp/elasticsearch-setup-passwords.txt
+  copy: 
+    content: "{{ elasticsearch_setup_passwords_output.stdout }}\n" 
+    dest: /tmp/elasticsearch-setup-passwords.txt
+  when: not elasticsearch_temp_passwords_file.stat.exists
+
+- name: Read contents of Elasticsearch password file
+  shell: "cat /tmp/elasticsearch-setup-passwords.txt"
+  register: elasticsearch_setup_passwords_output
+
+- name: Write contents of password generation to console
+  debug:
+    msg: "{{ elasticsearch_setup_passwords_output.stdout.split('\n') }}"
+  when: elasticsearch_setup_passwords_output.stdout is defined
+
+- name: Set fact with generation
+  set_fact:
+    kibana_es_username: 'kibana_system'
+    kibana_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[1].split(' ')[3] }}"
+    logstash_es_username: 'logstash_system'
+    logstash_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[3].split(' ')[3] }}"
+    elastic_es_username: 'elastic'
+    elastic_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[6].split(' ')[3] }}"
+
+- name: Elasticsearch healthcheck
+  uri:
+    url: "http://127.0.0.1:9200/_cluster/health"
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

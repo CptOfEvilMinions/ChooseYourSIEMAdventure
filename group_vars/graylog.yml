@@ -1,22 +1,31 @@
 ###################################################### Graylog ######################################################
-HOSTNAME: 'graylog'
+hostname: 'graylog'
 
-GRAYLOG_VERSION: '4.0'
-GRAYLOG_DL_URL: 'https://packages.graylog2.org/repo/packages/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
-
-ELASTIC_VERSION: 'elasticsearch-oss'
-ELASTIC_REPO_VERSION: 'oss-7.x'
-ELASTIC_GPG_URL: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
-ELASTIC_REPO_URL: 'deb https://artifacts.elastic.co/packages/{{ ELASTIC_REPO_VERSION }}/apt stable main'
-
-MONGO_VERSION: '4.2'
-MONGO_GPG_URL: 'https://www.mongodb.org/static/pgp/server-4.2.asc'
-MONGO_REPO_URL: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/{{ MONGO_VERSION }} multiverse'
+graylog_version: '4.0'
+graylog_dl_url: 'https://packages.graylog2.org/repo/packages/graylog-{{ graylog_version }}-repository_latest.deb'
 
 ### Beats input ###
-BEATS_TITLE: Beats input
-BEATS_TYPE: 'org.graylog.plugins.beats.Beats2Input'
-BEATS_PORT: 5044
-BEATS_TLS_ENABLE: true
-BEATS_TLS_CERT_FILE_PATH: "/etc/ssl/certs/{{ HOSTNAME }}.crt"
-BEATS_TLS_KEY_FILE_PATH: "/etc/ssl/private/{{ HOSTNAME }}.key"
+beats_title: Beats input
+beats_type: 'org.graylog.plugins.beats.Beats2Input'
+beats_port: 5044
+beats_tls_enable: true
+beats_tls_cert_file_path: "/etc/ssl/certs/{{ hostname }}.crt"
+beats_tls_key_file_path: "/etc/ssl/private/{{ hostname }}.key"
+
+###################################################### Elasticsearch ######################################################
+elastic_version: 7.10.0
+elastic_repo_version: '7.x'
+elastic_gpg_url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+elastic_repo_url: 'deb https://artifacts.elastic.co/packages/{{ elastic_repo_version }}/apt stable main'
+
+###################################################### Mongo ######################################################
+mongo_version: '4.2'
+mongo_gpg_url: 'https://www.mongodb.org/static/pgp/server-4.2.asc'
+mongo_repo_url: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/{{ mongo_version }} multiverse'
+
+#### credentials ####
+mongo_admin_username: 'admin'
+mongo_admin_password: 'Changeme123!'
+mongo_graylog_db_name: 'graylog'
+mongo_graylog_username: 'graylog'
+mongo_graylog_password: 'Changeme123!'

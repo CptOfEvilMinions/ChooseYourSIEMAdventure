@@ -1,4 +1,5 @@
 conf/tls/*
 !conf/tls/tls.conf
 example_1.json
-venv/
+pipeline_testers/venv
+conf/docker/splunk/default.yml

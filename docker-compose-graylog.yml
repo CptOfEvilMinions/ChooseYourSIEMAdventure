@@ -17,10 +17,12 @@ services:
       - 8000:80
       - 8443:443
     depends_on: 
-     - graylog
+      - graylog
 
   ###################################################### Graylog ######################################################
   graylog:
+    container_name: 'siem-graylog-graylog'
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/graylog/Dockerfile-graylog
@@ -28,8 +30,6 @@ services:
         GRAYLOG_VERSION: ${GRAYLOG_VERSION}
         SIEM_USERNAME: ${SIEM_USERNAME}
         SIEM_PASSWORD: ${SIEM_PASSWORD}
-    container_name: 'siem-graylog-graylog'
-    restart: unless-stopped
     environment:
       # Password is Changeme123!
       # To change password run: `echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | openssl sha256 | cut -d" " -f1`
@@ -69,7 +69,7 @@ services:
   elasticsearch:
     container_name: 'siem-graylog-elasticsearch'
     restart: unless-stopped
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:${GRAYLOG_ELATICSEARCH_VERSION}
     environment: 
       - http.host=0.0.0.0
       - discovery.type=single-node

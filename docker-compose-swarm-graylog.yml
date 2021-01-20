@@ -1,0 +1,188 @@
+version: "3.9"
+services: 
+  ###################################################### NGINX ######################################################
+  nginx:
+    image: nginx:1.19.6-alpine
+    configs:
+      - source: nginx-conf
+        target: /etc/nginx/nginx.conf
+      - source: nginx-graylog-conf
+        target: /etc/nginx/conf.d/graylog.conf
+    secrets:
+      - source: nginx-tls-cert
+        target: /etc/ssl/certs/nginx.crt
+      - source: nginx-tls-key
+        target: /etc/ssl/private/nginx.key
+    networks: 
+      - default
+      - graylog-backend 
+    ports:
+      - 8000:80
+      - 8443:443
+    depends_on: 
+      - graylog
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+  ###################################################### Graylog ######################################################
+  graylog:
+    image: graylog/graylog:4.0.1
+    secrets:
+      - source: nginx-tls-cert
+        target: /usr/share/graylog/tls/graylog.crt
+      - source: nginx-tls-key
+        target: /usr/share/graylog/tls/graylog.key
+      - graylog-root-password-sha2
+      - graylog-mongo-uri
+      - graylog-es-uri
+    configs:
+      - source: generate-beats-input-script
+        target: /usr/share/graylog/generate_beats_input.sh
+        mode: 0755
+    environment:
+      # Password is Changeme123!
+      # To change password run: `echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | openssl sha256 | cut -d" " -f1`
+      # https://docs.graylog.org/en/4.0/pages/installation/docker.html#reading-individual-configuration-settings-from-files
+      #- GRAYLOG_ROOT_PASSWORD_SHA2=<sha256 hash>
+      #- GRAYLOG_ELASTICSEARCH_HOSTS=http://elastic:es-password@elasticsearch:9200
+      #- GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:graylog-password@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
+      - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+      - GRAYLOG_ROOT_PASSWORD_SHA2__FILE=/run/secrets/graylog-root-password-sha2
+      - GRAYLOG_ELASTICSEARCH_HOSTS__FILE=/run/secrets/graylog-es-uri
+      - GRAYLOG_MONGODB_URI__FILE=/run/secrets/graylog-mongo-uri
+    ports:
+      - 5044:5044
+    networks: 
+      - default
+      - graylog-backend 
+    depends_on: 
+      - mongo
+      - elasticsearch
+    volumes: 
+      - graylog-data:/usr/share/graylog/data
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s 
+
+
+  ###################################################### MongoDB ######################################################
+  mongo:
+    image: mongo:4.2
+    secrets:
+      - graylog-mongo-username
+      - graylog-mongo-password
+    environment:
+      - MONGO_INITDB_DATABASE=graylog
+      - MONGO_INITDB_ROOT_USERNAME_FILE=/run/secrets/graylog-mongo-username
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/graylog-mongo-password
+    networks: 
+      - graylog-backend 
+    volumes: 
+      - graylog-mongo-db:/data/db
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 300M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s 
+
+  ###################################################### Elasticsearch ######################################################
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    secrets:
+      - source: graylog-elasticsearch-password
+        MODE: 0400
+    environment: 
+      - http.host=0.0.0.0
+      - discovery.type=single-node
+      - cluster.name=graylog
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD_FILE=/run/secrets/graylog-elasticsearch-password
+      - xpack.security.enabled=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    networks: 
+      - default
+      - graylog-backend 
+    ports:
+      - 9200:9200
+    volumes: 
+      - graylog-es-data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s 
+
+networks: 
+  graylog-backend:
+
+volumes: 
+  graylog-es-data:
+  graylog-mongo-db:
+  graylog-data:
+
+configs:
+  nginx-conf:
+    file: ./conf/docker/nginx/nginx.conf
+  nginx-graylog-conf:
+    file: ./conf/docker/nginx/graylog.conf
+  generate-beats-input-script:
+    file: ./conf/docker/graylog/generate_beats_input_docker_swarm.sh
+
+secrets:
+  nginx-tls-cert:
+    file: ./conf/tls/tls.crt
+  nginx-tls-key:
+    file: ./conf/tls/tls.key
+  graylog-root-password-sha2:
+    external: true
+  graylog-mongo-uri:
+    external: true
+  graylog-es-uri:
+    external: true
+  graylog-mongo-username:
+    external: true
+  graylog-mongo-password:
+    external: true
+  graylog-elasticsearch-password:
+    external: true

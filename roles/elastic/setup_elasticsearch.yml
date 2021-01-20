@@ -71,7 +71,7 @@
 
 - name: Write contents of password generation to /tmp/elasticsearch-setup-passwords.txt
   copy: 
-    content: "{{ elasticsearch_setup_passwords_output.stdout }} + \n" 
+    content: "{{ elasticsearch_setup_passwords_output.stdout }}\n" 
     dest: /tmp/elasticsearch-setup-passwords.txt
   when: not elasticsearch_temp_passwords_file.stat.exists
 

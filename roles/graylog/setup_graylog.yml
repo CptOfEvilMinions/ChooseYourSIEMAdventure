@@ -1,15 +1,15 @@
 #####################################################################
-# Install/Setup Graylog
+# Install Graylog
 #####################################################################
 - name: Stat Graylog download
   stat:
-    path: '/tmp/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+    path: '/tmp/graylog-{{ graylog_version }}-repository_latest.deb'
   register: graylog_dl
 
 - name: Download Graylog
   get_url:
-    url: '{{ GRAYLOG_DL_URL }}'
-    dest: '/tmp/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+    url: '{{ graylog_dl_url }}'
+    dest: '/tmp/graylog-{{ graylog_version }}-repository_latest.deb'
   when: not graylog_dl.stat.exists
 
 - name: Stat Graylog directory
@@ -19,7 +19,7 @@
 
 - name: Install Graylog repo
   apt:
-    deb: '/tmp/graylog-{{ GRAYLOG_VERSION }}-repository_latest.deb'
+    deb: '/tmp/graylog-{{ graylog_version }}-repository_latest.deb'
   when: not graylog_dir.stat.exists
 
 - name: Run the equivalent of "apt-get update" as a separate step
@@ -28,31 +28,174 @@
 
 - name: Install Graylog
   apt:
-    name: ['graylog-server', 'graylog-enterprise-plugins', 'graylog-integrations-plugins', 'graylog-enterprise-integrations-plugins']
+    name: ['graylog-server', 'graylog-integrations-plugins']
     state: latest
 
-- name: Covert password to sha256 hash
-  shell: "echo -n {{ siem_password }} | sha256sum | awk '{print $1}'"
-  register: pass_contents
+#####################################################################
+# Create Graylog user on ES
+#####################################################################
+- name: Read elastic user credentials
+  shell: "cat /tmp/elasticsearch-setup-passwords.txt"
+  register: elasticsearch_setup_passwords_output
 
-- name: Set admin password
+- name: Set elastic user credentials
+  set_fact:
+    elastic_es_username: 'elastic'
+    elastic_es_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[6].split(' ')[3] }}"
+  when: elastic_es_username is undefined or elastic_es_password is undefined
+
+- name: Get list of Elastic roles
+  uri:
+    url: http://localhost:9200/_security/role
+    method: GET
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    status_code: 200
+  register: _result
+
+- name: Create graylog role
+  uri:
+    url: http://localhost:9200/_xpack/security/role/graylog
+    method: POST
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "cluster": ["manage_index_templates", "monitor", "manage_ilm"], 
+        "indices": [
+        {
+          "names": [ "*" ], 
+          "privileges": ["write","create","delete","create_index","manage","manage_ilm","read","view_index_metadata"]  
+        }
+        ]
+      }
+    status_code: 200
+  when: _result.json.graylog is undefined
+
+- name: Set graylog user credentials
+  set_fact:
+    graylog_sys_username: 'graylog'
+    graylog_sys_password: "{{ elasticsearch_setup_passwords_output.stdout.split('\n')[7].split(' ')[3] }}"
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is defined
+
+- name: Create graylog user credentials
+  set_fact:
+    graylog_sys_username: 'graylog'
+    graylog_sys_password: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=15') }}"
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: Check if graylog user exists
+  uri:
+    url: http://localhost:9200/_security/user
+    method: GET
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    status_code: 200
+  register: _result
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: Create graylog user
+  uri:
+    url: 'http://localhost:9200/_security/user/{{ graylog_sys_username }}'
+    method: POST
+    user: '{{ elastic_es_username }}'
+    password: '{{ elastic_es_password }}'
+    body_format: json
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "password" : "{{ graylog_sys_password }}",
+        "roles" : [ "graylog" ],
+        "full_name" : "Graylgo system account",
+        "email" : "graylog_system@{{ base_domain }}"
+      }
+    status_code: 200
+  when: _result.json.graylog is undefined
+
+- name: Write username and password to file 
+  lineinfile:
+    path: /tmp/elasticsearch-setup-passwords.txt
+    line: 'PASSWORD {{ graylog_sys_username }} = {{ graylog_sys_password }}'
+    create: yes
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: PRINT credentials
+  debug:
+    msg: 'PASSWORD {{ graylog_sys_username }} = {{ graylog_sys_password }}'
+
+#####################################################################
+# Setup Graylog
+#####################################################################
+- name: Covert password to sha256 hash
   lineinfile:
     path: /etc/graylog/server/server.conf
     regexp: '^root_password_sha2 ='
-    line: "root_password_sha2 = {{ pass_contents.stdout }}"
+    line: "root_password_sha2 = {{ siem_password | hash('sha256') }}"
 
-- name: Generate secret key
-  shell: "pwgen -s 96 1"
-  register: secret_key_content
+- name: Check if password_secret is set
+  lineinfile:
+    name: /etc/graylog/server/server.conf
+    line: 'password_secret ='
+    state: present
+  check_mode: yes
+  register: password_secret
 
-- name: Set secret key
-  shell: sed -i -e "s/password_secret =.*/password_secret = {{ secret_key_content.stdout }}/" /etc/graylog/server/server.conf
+- name: Generate and set secret key
+  lineinfile:
+    path: /etc/graylog/server/server.conf
+    regexp: '^password_secret ='
+    line: "password_secret = {{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=96') }}"
+  when: password_secret.changed == false
+
+- name: Set Mongo URI
+  lineinfile:
+    path: /etc/graylog/server/server.conf
+    regexp: '^mongodb_uri ='
+    line: "mongodb_uri = mongodb://{{ mongo_graylog_username }}:{{ mongo_graylog_password }}@localhost:27017/{{ mongo_graylog_db_name }}"
+
+- name: Read contents of Elasticsearch password file
+  shell: "cat /tmp/elasticsearch-setup-passwords.txt"
+  register: elasticsearch_setup_passwords_output
+
+- name: Set fact with generation
+  set_fact:
+    graylog_sys_username: 'graylog'
+    graylog_sys_password: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=15') }}"
+  when: elasticsearch_setup_passwords_output.stdout.split('\n')[7] is undefined
+
+- name: Set Elasticsearch URI
+  lineinfile:
+    path: /etc/graylog/server/server.conf
+    regexp: '^#elasticsearch_hosts'
+    line: "elasticsearch_hosts = http://{{ graylog_sys_username }}:{{ graylog_sys_password }}@localhost:9200"
 
 - name: Start and Enable Graylog service
   service:
     name: graylog-server.service
     state: restarted
     enabled: yes
+
+- name: Graylog healthcheck
+  uri:
+    url: "http://127.0.0.1:9000"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
 
 #####################################################################
 # Setup Graylog Beats input
@@ -84,8 +227,8 @@
     body_format: json
     body: |
       {
-        "title": "{{ BEATS_TITLE }}",
-        "type": "{{ BEATS_TYPE }}",
+        "title": "{{ beats_title }}",
+        "type": "{{ beats_type }}",
         "global": true,
         "configuration": {
           "recv_buffer_size": 1048576,
@@ -93,10 +236,10 @@
           "number_worker_threads": 4,
           "tls_client_auth_cert_file": "",
           "bind_address": "0.0.0.0",
-          "tls_cert_file": "{{ BEATS_TLS_CERT_FILE_PATH }}",
-          "port": {{ BEATS_PORT }},
-          "tls_key_file": "{{ BEATS_TLS_KEY_FILE_PATH }}",
-          "tls_enable": {{ BEATS_TLS_ENABLE }},
+          "tls_cert_file": "{{ beats_tls_cert_file_path }}",
+          "port": {{ beats_port }},
+          "tls_key_file": "{{ beats_tls_key_file_path }}",
+          "tls_enable": {{ beats_tls_enable }},
           "tls_key_password": "",
           "tls_client_auth": "disabled",
           "override_source": null,

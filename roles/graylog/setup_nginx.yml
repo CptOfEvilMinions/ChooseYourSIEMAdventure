@@ -8,13 +8,6 @@
   with_items:
     - nginx
 
-- name: Create TLS directory for NGINX
-  file:
-    path: /etc/nginx/tls
-    owner: root
-    group: root
-    state: directory
-
 - name: Copy nginx.conf
   template:
     src: conf/ansible/nginx/nginx.conf
@@ -31,24 +24,52 @@
     group: root
     mode: 0644
   
-- name: Copy Self-signed public cert for Graylog
+- name: Copy Self-signed public cert for NGINX
   template:
-    src: 'conf/tls/docker.key'
-    dest: '/etc/ssl/private/{{ hostname }}.key'
+    src: '{{ item }}'
+    dest: '/etc/ssl/private/nginx.key'
     owner: 'root'
     group: 'root'
     mode: 0400
+  with_fileglob:
+    - conf/tls/*.key
 
-- name: Copy Self-signed private key for Graylog
+- name: Copy Self-signed private key for NGINX
   template:
-    src: 'conf/tls/docker.crt'
-    dest: '/etc/ssl/certs/{{ hostname }}.crt'
+    src: '{{ item }}'
+    dest: '/etc/ssl/certs/nginx.crt'
     owner: 'root'
     group: 'root'
     mode: 0644
+  with_fileglob:
+    - 'conf/tls/*.crt'
 
 - name: Start Nginx service
   service:
     name: nginx
     state: restarted
     enabled: yes
+
+- name: NGINX healthcheck
+  uri:
+    url: "https://127.0.0.1:443"
+    follow_redirects: none
+    method: GET
+    validate_certs: 'no'
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
+
+- name: NGINX port 80 to 443 healthcheck
+  uri:
+    url: "http://127.0.0.1:80"
+    follow_redirects: safe
+    method: GET
+    validate_certs: 'no'
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

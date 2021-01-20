@@ -24,21 +24,25 @@
     group: root
     mode: 0644
   
-- name: Copy Self-signed public cert for Elastic
+- name: Copy Self-signed public cert for NGINX
   template:
-    src: 'conf/tls/docker.key'
+    src: '{{ item }}'
     dest: '/etc/ssl/private/nginx.key'
     owner: 'root'
     group: 'root'
     mode: 0400
+  with_fileglob:
+    - conf/tls/*.key
 
-- name: Copy Self-signed private key for Elastic
+- name: Copy Self-signed private key for NGINX
   template:
-    src: 'conf/tls/docker.crt'
+    src: '{{ item }}'
     dest: '/etc/ssl/certs/nginx.crt'
     owner: 'root'
     group: 'root'
     mode: 0644
+  with_fileglob:
+    - 'conf/tls/*.crt'
 
 - name: Start Nginx service
   service:

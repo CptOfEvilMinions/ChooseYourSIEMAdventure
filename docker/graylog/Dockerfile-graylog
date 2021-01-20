@@ -9,7 +9,6 @@ COPY conf/tls/*.crt /usr/share/graylog/tls/graylog.crt
 COPY conf/tls/*.key /usr/share/graylog/tls/graylog.key
 
 # Copy BEATS input script
-RUN whoami
 COPY conf/docker/graylog/generate_beats_input.sh /usr/share/graylog/generate_beats_input.sh
 RUN sed -i "s/graylog-test-user/${SIEM_USERNAME}/g" /usr/share/graylog/generate_beats_input.sh
 RUN sed -i "s/graylog-test-password/${SIEM_PASSWORD}/g" /usr/share/graylog/generate_beats_input.sh
