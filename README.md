@@ -1,19 +1,18 @@
 # Choose your own SIEM adventure
 Repo of configs for the three major SIEMs. 
 
+## Blog posts:
+* [Elastic](https://holdmybeersecurity.com/2021/01/24/the-tale-of-the-incident-responders-quest-for-the-holy-siem-elastic-stack)
+* [Graylog](https://holdmybeersecurity.com/2021/01/24/the-tale-of-the-incident-responders-quest-for-the-holy-siem-graylog)
+* [Splunk](https://holdmybeersecurity.com/2021/01/24/the-tale-of-the-incident-responders-quest-for-the-holy-siem-splunk)
+
 ## Security notes
 * <span style="color:red;">Default password is set to `Changem123!`</span>
-* <span style="color:red;">Docker stacks are for development ONLY and are NOT secure for production</span>
-
-## Default credentials
-<span style="color:red;">Default password is set to `Changem123!` or the value of `SIEM_PASSWORD` in `.env`, see instructions in `docs/`</span>
+* <span style="color:red;">Docker-composes v2.X  are for development ONLY and are NOT secure for production</span>
 
 ## Config direcotry: `conf/`
-* `conf/ansible` - This directory contains all the configs for the Ansible playbooks and a manual install
-* `conf/docker` - This directory contains all the configs for Docker
-
-## Generate public cert and private key
-1. `openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout conf/tls/docker.key -out conf/tls/docker.crt`
+* `conf/ansible/*` - This directory contains all the configs for the Ansible playbooks and a manual install
+* `conf/docker/*` - This directory contains all the configs for Docker
 
 ## Elasticsearch setting heap size
 The Ansible playbooks will automatically set the heap size to half of total system memory allocated to a host. For example, if a machine has `16GB` of memory, the ES heap size will be set to `8GB`.

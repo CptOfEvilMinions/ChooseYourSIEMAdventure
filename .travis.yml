@@ -1,37 +1,39 @@
-# arch: amd64
-# os: linux
-# dis: focal
+# Ubuntu 20.04 (focal) x64-amd64
+arch: amd64
+os: linux
+dis: focal
 
 stages:
   install-deps:
   docker-swarm-init:
+  openssl-generate:
   ####### Elastic #######
-  #elastic-ansible:
   #elastic-docker-v2:
-  #elastic-docker-v3:
-  #elastic-test:
+  elastic-docker-v3:
+  #elastic-ansible:
   ####### Graylog #######
   #graylog-ansible:
   #graylog-docker-v2:
   #graylog-docker-v3:
-  #graylog-test:
   ####### Splunk #######
   #splunk-ansible:
   #splunk-docker-v2:
   #splunk-docker-v3:
-  #splunk-test:r
 
 jobs:
+  ############################################################### Stage: install-deps ###############################################################
   include:
     - stage: install-deps
       # Install tools
-      script: sudo apt update -y && apt install python3 python3-pip apt-transport-https ca-certificates curl software-properties-common -y
+      script: sudo apt update -y && apt install openssl python3 python3-pip apt-transport-https ca-certificates curl software-properties-common -y
       script: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
         sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" \
         sudo apt update -y \
         sudo apt install docker-ce -y
       # Install Ansible and Docker
       script: pip3 install ansible>=2.10.4 docker-compose>=1.27.4
+      script: pip3 install -r pipeline_testers/requirements.txt
+  ############################################################### Stage: docker-swarm-init ###############################################################
   include:
     - stage: docker-swarm-init
       # https://docs.docker.com/engine/reference/commandline/swarm_init/
@@ -39,15 +41,53 @@ jobs:
       script: docker ps
       script: docker secret ls
       script: docker image ls
+  
+  ############################################################### Stage: openssl-generate ###############################################################
+  inclde: 
+    - stage: openssl-generate
+      script: openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf
 
-# before_install:
-#   # Build Docker stack
-#   - echo "Bulding Docker stack"
-#   - docker-compose -f docker-compose-elastic.yml build
-#   # Start Docker stack
-#   - echo "Start Docker stack"
-#   - docker-compose -f docker-compose-elastic.yml up
-#   # Python test pipeline
-#   - cd pipeline_testers \
-#     pip3 install -r requirements.txt \
-#     python3 beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
+  ############################################################### Stage: elastic-docker-v2 ###############################################################
+  # include:
+  #   - stage: elastic-docker-v2
+  #     script: echo "Building Docker stack"
+  #     script: docker-compose -f docker-compose-elastic.yml build
+      
+  #     script: echo "Start Docker stack"
+  #     script: docker-compose -f docker-compose-elastic.yml up
+      
+  #     script: echo "Test pipeline stack"
+  #     script: python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
+      
+  #     script: echo "Tear down Docker stack"
+  #     script: docker-compose -f docker-compose-elastic.yml down -v
+
+  ############################################################### Stage: elastic-docker-v3 ###############################################################
+  include:
+    - stage: elastic-docker-v3
+      script: echo "Deplo Docker stack"
+      script: docker stack deploy -c docker-compose-swarm-elastic.yml elastic
+
+      script: echo "Test pipeline stack"
+      script: python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
+      
+      script: echo "Tear down Docker stack"
+      script: docker stack rm elastic && sleep 10 && docker volume rm elastic_elastic-es-config elastic_elastic-es-data
+
+  # ###############################################################
+  # include:
+  #   - stage: elastic-ansible
+  #     script: echo "Run Ansible playbook"
+  #     script: ansible-playbook --connection=local deploy_elastic.yml 
+
+  #     script: echo "Test pipeline stack"
+  #     script: ES_PASSWORD=$(cat /tmp/elasticsearch-setup-passwords.txt | grep 'PASSWORD elastic' | awk '{print $4}') \
+  #       echo ${ES_PASSWORD} \
+  #       python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password ${ES_PASSWORD} --es_port 9200
+      
+  #     script: echo "Tear down Ansible stack"
+  #     script: systemctl stop elasticsearch && \
+  #       systemctl stop logstash && \
+  #       systemctl stop kibana && \
+  #       systemctl stop nginx && \
+  #       apt remove --purge elasticsearch logstash kibana nginx -y
