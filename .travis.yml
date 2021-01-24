@@ -1,17 +1,53 @@
 # arch: amd64
 # os: linux
 # dis: focal
-services:
-  - docker
 
-before_install:
-  # Build Docker stack
-  - echo "Bulding Docker stack"
-  - docker-compose -f docker-compose-elastic.yml build
-  # Start Docker stack
-  - echo "Start Docker stack"
-  - docker-compose -f docker-compose-elastic.yml up
-  # Python test pipeline
-  - cd pipeline_testers \
-    pip3 install -r requirements.txt \
-    python3 beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
+stages:
+  install-deps:
+  docker-swarm-init:
+  ####### Elastic #######
+  #elastic-ansible:
+  #elastic-docker-v2:
+  #elastic-docker-v3:
+  #elastic-test:
+  ####### Graylog #######
+  #graylog-ansible:
+  #graylog-docker-v2:
+  #graylog-docker-v3:
+  #graylog-test:
+  ####### Splunk #######
+  #splunk-ansible:
+  #splunk-docker-v2:
+  #splunk-docker-v3:
+  #splunk-test:r
+
+jobs:
+  include:
+    - stage: install-deps
+      # Install tools
+      script: sudo apt update -y && apt install python3 python3-pip apt-transport-https ca-certificates curl software-properties-common -y
+      script: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" \
+        sudo apt update -y \
+        sudo apt install docker-ce -y
+      # Install Ansible and Docker
+      script: pip3 install ansible>=2.10.4 docker-compose>=1.27.4
+  include:
+    - stage: docker-swarm-init
+      # https://docs.docker.com/engine/reference/commandline/swarm_init/
+      script: docker swarm init --advertise-addr $(ip r | grep default | awk '{print $9}')
+      script: docker ps
+      script: docker secret ls
+      script: docker image ls
+
+# before_install:
+#   # Build Docker stack
+#   - echo "Bulding Docker stack"
+#   - docker-compose -f docker-compose-elastic.yml build
+#   # Start Docker stack
+#   - echo "Start Docker stack"
+#   - docker-compose -f docker-compose-elastic.yml up
+#   # Python test pipeline
+#   - cd pipeline_testers \
+#     pip3 install -r requirements.txt \
+#     python3 beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
