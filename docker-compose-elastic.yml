@@ -78,7 +78,6 @@ services:
         SIEM_USERNAME: elastic
         SIEM_PASSWORD: ${SIEM_PASSWORD}
         OUTPUT_CONFIG: 'conf/docker/elastic/30-output-elasticsearch.conf'
-        SIEM_ENV: 'elastic'
     networks: 
       - default
       - elastic-backend 
