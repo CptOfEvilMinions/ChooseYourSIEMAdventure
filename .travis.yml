@@ -2,50 +2,80 @@
 arch: amd64
 os: linux
 dis: focal
+language: generic
+sudo: required
 
-stages:
-  install-deps:
-  docker-swarm-init:
-  openssl-generate:
-  ####### Elastic #######
-  #elastic-docker-v2:
-  elastic-docker-v3:
-  #elastic-ansible:
-  ####### Graylog #######
-  #graylog-ansible:
-  #graylog-docker-v2:
-  #graylog-docker-v3:
-  ####### Splunk #######
-  #splunk-ansible:
-  #splunk-docker-v2:
-  #splunk-docker-v3:
+# stages:
+#   install-deps:
+#   docker-swarm-init:
+#   openssl-generate:
+#   ####### Elastic #######
+#   #elastic-docker-v2:
+#   elastic-docker-v3:
+#   #elastic-ansible:
+#   ####### Graylog #######
+#   #graylog-ansible:
+#   #graylog-docker-v2:
+#   #graylog-docker-v3:
+#   ####### Splunk #######
+#   #splunk-ansible:
+#   #splunk-docker-v2:
+#   #splunk-docker-v3:
 
-jobs:
+install-deps:
+  #- apt update -y && apt install python3 python3-pip apt-transport-https ca-certificates curl software-properties-common -y
+  #- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+  #    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" \
+  #    sudo apt update -y \
+  #    sudo apt install docker-ce -y
+  #- pip3 install ansible>=2.10.4 docker-compose>=1.27.4
+  #- pip3 install -r pipeline_testers/requirements.txt
+
+
+docker-swarm-init:
+  - docker swarm init --advertise-addr $(ip r | grep default | awk '{print $9}')
+  - docker ps
+  - docker secret ls
+
+openssl-generate:
+  - openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf
+
+elastic-docker-v3:
+  - echo "Deplo Docker stack"
+  - docker stack deploy -c docker-compose-swarm-elastic.yml elastic
+
+  - echo "Test pipeline stack"
+  - python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200  
+   
+  - echo "Tear down Docker stack"
+  - docker stack rm elastic && sleep 10 && docker volume rm elastic_elastic-es-config elastic_elastic-es-data
+
+#jobs:
   ############################################################### Stage: install-deps ###############################################################
-  include:
-    - stage: install-deps
-      # Install tools
-      script: sudo apt update -y && apt install openssl python3 python3-pip apt-transport-https ca-certificates curl software-properties-common -y
-      script: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" \
-        sudo apt update -y \
-        sudo apt install docker-ce -y
-      # Install Ansible and Docker
-      script: pip3 install ansible>=2.10.4 docker-compose>=1.27.4
-      script: pip3 install -r pipeline_testers/requirements.txt
+  # include:
+  #   - stage: install-deps
+
+  #     # Install tools
+  #     script: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+  #       sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" \
+  #       sudo apt update -y \
+  #       sudo apt install docker-ce -y
+  #     # Install Ansible and Docker
+  #     script: pip3 install ansible>=2.10.4 docker-compose>=1.27.4
+  #     script: pip3 install -r pipeline_testers/requirements.txt
   ############################################################### Stage: docker-swarm-init ###############################################################
-  include:
-    - stage: docker-swarm-init
-      # https://docs.docker.com/engine/reference/commandline/swarm_init/
-      script: docker swarm init --advertise-addr $(ip r | grep default | awk '{print $9}')
-      script: docker ps
-      script: docker secret ls
-      script: docker image ls
+  # include:
+  #   - stage: docker-swarm-init
+  #     # https://docs.docker.com/engine/reference/commandline/swarm_init/
+  #     script: docker swarm init --advertise-addr $(ip r | grep default | awk '{print $9}')
+  #     script: docker ps
+  #     script: docker secret ls
+  #     script: docker image ls
   
   ############################################################### Stage: openssl-generate ###############################################################
-  inclde: 
-    - stage: openssl-generate
-      script: openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf
+  # inclde: 
+  #   - stage: openssl-generate
+  #     script: openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf
 
   ############################################################### Stage: elastic-docker-v2 ###############################################################
   # include:
@@ -63,16 +93,16 @@ jobs:
   #     script: docker-compose -f docker-compose-elastic.yml down -v
 
   ############################################################### Stage: elastic-docker-v3 ###############################################################
-  include:
-    - stage: elastic-docker-v3
-      script: echo "Deplo Docker stack"
-      script: docker stack deploy -c docker-compose-swarm-elastic.yml elastic
+  # include:
+  #   - stage: elastic-docker-v3
+  #     script: echo "Deplo Docker stack"
+  #     script: docker stack deploy -c docker-compose-swarm-elastic.yml elastic
 
-      script: echo "Test pipeline stack"
-      script: python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
+  #     script: echo "Test pipeline stack"
+  #     script: python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
       
-      script: echo "Tear down Docker stack"
-      script: docker stack rm elastic && sleep 10 && docker volume rm elastic_elastic-es-config elastic_elastic-es-data
+  #     script: echo "Tear down Docker stack"
+  #     script: docker stack rm elastic && sleep 10 && docker volume rm elastic_elastic-es-config elastic_elastic-es-data
 
   # ###############################################################
   # include:
@@ -91,3 +121,8 @@ jobs:
   #       systemctl stop kibana && \
   #       systemctl stop nginx && \
   #       apt remove --purge elasticsearch logstash kibana nginx -y
+
+
+deploy:
+  on:
+    branch: master
