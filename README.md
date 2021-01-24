@@ -69,13 +69,18 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * []()
 * []()
 
-### Python
+### Pipeline-testers
 * [stackoverflow- ISO time (ISO 8601) in Python](https://stackoverflow.com/questions/2150739/iso-time-iso-8601-in-python?rq=1)
 * [How to transform a timestamp in ms to datetime format?](https://community.graylog.org/t/how-to-transform-a-timestamp-in-ms-to-datetime-format/4996/4)
+* [How to throw error and exit with a custom message in python](https://stackoverflow.com/questions/22633544/how-to-throw-error-and-exit-with-a-custom-message-in-python)
+* [Python - Requests - Authentication](https://requests.readthedocs.io/en/master/user/authentication/)
+* [Elasticsearch - Search multiple data streams and indices](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multiple-indices.html)
+* [How to get current date and time in Python?](https://www.programiz.com/python-programming/datetime/current-datetime)
+* [StackOverFlow - Random string generation with upper case letters and digits](https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits)
 * []()
 * []()
 * []()
-* []()
+
 
 ### Elastic stack
 * [CptOfEvilMinions/BlogProjects](https://github.com/CptOfEvilMinions/BlogProjects/tree/master/ElasticStackv7)

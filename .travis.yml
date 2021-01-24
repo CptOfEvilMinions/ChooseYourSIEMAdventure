@@ -1,0 +1,17 @@
+# arch: amd64
+# os: linux
+# dis: focal
+services:
+  - docker
+
+before_install:
+  # Build Docker stack
+  - echo "Bulding Docker stack"
+  - docker-compose -f docker-compose-elastic.yml build
+  # Start Docker stack
+  - echo "Start Docker stack"
+  - docker-compose -f docker-compose-elastic.yml up
+  # Python test pipeline
+  - cd pipeline_testers \
+    pip3 install -r requirements.txt \
+    python3 beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200
