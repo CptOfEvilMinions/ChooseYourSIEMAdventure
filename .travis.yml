@@ -22,6 +22,7 @@ sudo: required
 #   #splunk-docker-v2:
 #   #splunk-docker-v3:
 
+############################################################### Stage: install-deps ###############################################################
 install-deps:
   #- apt update -y && apt install python3 python3-pip apt-transport-https ca-certificates curl software-properties-common -y
   #- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
@@ -31,22 +32,24 @@ install-deps:
   #- pip3 install ansible>=2.10.4 docker-compose>=1.27.4
   #- pip3 install -r pipeline_testers/requirements.txt
 
-
+############################################################### Stage: docker-swarm-init ###############################################################
 docker-swarm-init:
   - docker swarm init --advertise-addr $(ip r | grep default | awk '{print $9}')
   - docker ps
   - docker secret ls
 
+############################################################### Stage: openssl-generate ###############################################################
 openssl-generate:
   - openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf
 
+############################################################### Stage: elastic-docker-v3 ###############################################################
 elastic-docker-v3:
   - echo "Deplo Docker stack"
   - docker stack deploy -c docker-compose-swarm-elastic.yml elastic
 
   - echo "Test pipeline stack"
   - python3 pipeline_testers/beats_input_test.py --host 127.0.0.1 -p 5044 --es_username elastic --es_password Changeme123! --es_port 9200  
-   
+
   - echo "Tear down Docker stack"
   - docker stack rm elastic && sleep 10 && docker volume rm elastic_elastic-es-config elastic_elastic-es-data
 
@@ -125,4 +128,4 @@ elastic-docker-v3:
 
 deploy:
   on:
-    branch: master
+    branch: main
