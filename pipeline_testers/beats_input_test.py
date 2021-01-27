@@ -8,35 +8,33 @@ import time
 import sys
 import string
 import random
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def check_elasticsearch(es_host, es_port, es_username, es_password, retries, random_message):
+class SIEM:
+  def __init__(self, host, port, platform, ingest_port, siem_username, siem_password, retries):
+    self.host = host
+    self.port = port
+    self.siem_username = siem_username
+    self.siem_password = siem_password
+    self.platform = platform
+    self.ingest_port = ingest_port
+    self.retries = retries
+    self.random_message = self.generate_random_message()
+
+  def generate_random_message(self):
+    """
+    Generate random message
+    """
+    random_message = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64))
+    print (f"[+] - {datetime.now()} - Generated random message: {random_message}")  
+    return random_message
+
+
+def send_log(siem):
   """
+  Send randomly generated message
   """
-  search_dict = {
-    "query": {
-      "match": {
-        "message": random_message
-      }
-    }
-  }
-  
-  indice_name = f"python-logstash-{str(date.today()).replace('-','.')}"
-  url = f"http://{es_host}:{es_port}/{indice_name}/_search"
-
-  for i in range(0, retries):
-    result = requests.get(url=url, json=search_dict, auth=HTTPBasicAuth(es_username, es_password)).json()
-    if int(result['hits']['total']['value']) > 0:
-      return True
-    time.sleep(3)
-
-  return False
-
-
-def send_log(host, port, message):
-  # Generate random string
-  random_message = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64))
-  print (f"Random message: {random_message}")
-
   # Generate test log event
   message = {
     "@timestamp": datetime.utcnow().replace(tzinfo=timezone.utc).isoformat(),
@@ -44,7 +42,7 @@ def send_log(host, port, message):
     "host": "my-local-host",
     "level": "INFO",
     "logsource": "my-local-host",
-    "message": random_message,
+    "message": siem.random_message,
     "pid": 65534,
     "program": "example.py",
     "service": {
@@ -53,32 +51,111 @@ def send_log(host, port, message):
   }
   
   # Create connector
-  client = PyLogBeatClient(host, port, ssl_enable=True, ssl_verify=False)
+  client = PyLogBeatClient(siem.host, siem.ingest_port, ssl_enable=True, ssl_verify=False)
 
-  # Connect to server, send log message, and close connection
-  client.connect()
-  client.send([message])
-  client.close()
+  try:
+    # Connect to server, send log message, and close connection
+    client.connect()
+    client.send([message])
+    client.close()
+    print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}") 
+    return True , None
+  except Exception as e:
+    return False, e
 
-  print ("Log sent")
-  return random_message
+
+def check_graylog(siem):
+  """
+  """
+  headers ={
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'X-Requested-By': 'cli'
+  }
+
+  # Generate URL
+  url = f"https://{siem.host}:{siem.port}/api/search/universal/relative?query={siem.random_message}&range=3600&limit=100&sort=timestamp:desc&pretty=true"
+
+  for i in range(0, siem.retries):
+    result = requests.get(url=url, headers=headers, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
+    if len(result['messages']) > 0:
+      return True
+    time.sleep(3)
+
+  return False
+
+
+def check_elasticsearch(siem):
+  """
+  """
+  search_dict = {
+    "query": {
+      "match": {
+        "message": siem.random_message
+      }
+    }
+  }
+  
+  indice_name = f"python-logstash-{str(datetime.utcnow().date()).replace('-','.')}"
+  url = f"http://{siem.host}:{siem.port}/{indice_name}/_search"
+
+  for i in range(0, siem.retries):
+    result = requests.get(url=url, json=search_dict, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
+    if int(result['hits']['total']['value']) > 0:
+      return True
+    time.sleep(3)
+
+  return False
+
+
+def check_splunk(siem):  
+  """
+  """
+  #### Create search job ####
+  search = f'index=default AND \"{siem.random_message}\"'
+
+  url =f"http://{siem.host}:{siem.port}/services/search/jobs"
+  r = requests.post(url=url, json=search, auth=HTTPBasicAuth(siem.siem_username, siem.password))
+  job_id = r.text
+
+  #### Get job results ####
+  url =f"http://{siem.host}:{siem.port}/services/search/jobs/{job_id}/results/"
+  for i in range(0, siem.retries):
+    result = requests.get(url=url, json=search, data="output_mode=json", auth=HTTPBasicAuth(siem.siem_username, siem.password), verify=False).json()
+    print (result)
+    if int(result['hits']['total']['value']) > 0:
+      return True
+    time.sleep(3)
+
+  return False
+
+
 
 if __name__ == "__main__":
-  my_parser = argparse.ArgumentParser()
-  my_parser.add_argument('--host', type=str, required=True, help='Specify Logstash FQDN or IP address')
-  my_parser.add_argument('-p','--port', type=int, default=5044, help='Specify Logstash port')
-  my_parser.add_argument('-m','--message', type=str, default='hello world', help='Specify log message/payload')
-  my_parser.add_argument('-r','--retries', type=int, default=10, help='Number of times to retry query')
-  my_parser.add_argument('--es_username', type=str, default='elastic', help='Elasticsearch username')
-  my_parser.add_argument('--es_password', type=str, default='Changeme123!', help='Elasticsearch password')
-  my_parser.add_argument('--es_port', type=int, default=9200, help='Elasticsearch port')
-  args = my_parser.parse_args()
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--host', type=str, required=True, help='Specify server FQDN or IP address')
+  parser.add_argument('--api_port', type=int, default=443, help='WebGUI port')
+  parser.add_argument('--retries', type=int, default=10, help='Number of times to retry query')
+  parser.add_argument('--ingest_port', type=int, default=5044, help='Specify port to ingest logs')
+  parser.add_argument('--platform', type=str, required=True, choices=['elastic','graylog','splunk'], help='Specify SIEM platform')
+  parser.add_argument('--siem_username', type=str, default='admin', help='SIEM username')
+  parser.add_argument('--siem_password', type=str, default='Changeme123!', help='SIEM password')
+  args = parser.parse_args()
+ 
+  # Create SIEM object
+  siem = siem = SIEM(args.host, args.api_port, args.platform, args.ingest_port, args.siem_username, args.siem_password, args.retries)
 
-  # Generate random message and send it
-  random_message = send_log(args.host, args.port, args.message)
+  # Send random message
+  result, err = send_log(siem)
+  if err != None:
+    print (f"[-] - {datetime.now()} - Failed to send random message to {siem.platform} - {siem.host}:{siem.ingest_port}") 
 
   # Query for random message
-  if check_elasticsearch(args.host, args.es_port, args.es_username, args.es_password, args.retries, random_message):
-    print (f"[+] - {datetime.now()} - Random message: {random_message} ingested")
+  if siem.platform == 'elastic' and check_elasticsearch(siem):
+    print (f"[+] - {datetime.now()} - Random message: {siem.random_message} ingested in {siem.platform}")
+  elif siem.platform == 'graylog' and check_graylog(siem):
+    print (f"[+] - {datetime.now()} - Random message: {siem.random_message} ingested in {siem.platform}")
+  elif siem.platform == 'splunk'and check_splunk(siem):
+    print (f"[+] - {datetime.now()} - Random message: {siem.random_message} ingested in {siem.platform}")
   else:
-    sys.exit(f"[-] - {datetime.now()} - Random message: {random_message} NOT found in python-logstash-{str(date.today()).replace('-','.')} indice")
+    print ("Failed")

@@ -8,10 +8,9 @@ if [ ${SIEM_USERNAME} == "graylog-test-user" ] && [ ${SIEM_PASSWORD} == "graylog
 then
   echo -n "Enter Graylog admin username: "
   read SIEM_USERNAME
-  echo -e "\n"
   echo -n "Enter Graylog admin password: "
   read -s SIEM_PASSWORD
-  echo -e "\n"
+  echo -e "\n\n"
 fi
 
 ### UNTIL ###

@@ -2,9 +2,9 @@
 Repo of configs for the three major SIEMs. 
 
 ## Blog posts:
-* [Elastic](https://holdmybeersecurity.com/2021/01/24/the-tale-of-the-incident-responders-quest-for-the-holy-siem-elastic-stack)
-* [Graylog](https://holdmybeersecurity.com/2021/01/24/the-tale-of-the-incident-responders-quest-for-the-holy-siem-graylog)
-* [Splunk](https://holdmybeersecurity.com/2021/01/24/the-tale-of-the-incident-responders-quest-for-the-holy-siem-splunk)
+* [Elastic](https://holdmybeersecurity.com/2021/01/27/ir-tales-the-quest-for-the-holy-siem-elastic-stack-sysmon-osquery/)
+* [Graylog]()
+* [Splunk]()
 
 ## Security notes
 * <span style="color:red;">Default password is set to `Changem123!`</span>
@@ -31,6 +31,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * []()
 * []()
 * []()
+
 
 
 ### Ansible
@@ -76,7 +77,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Elasticsearch - Search multiple data streams and indices](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multiple-indices.html)
 * [How to get current date and time in Python?](https://www.programiz.com/python-programming/datetime/current-datetime)
 * [StackOverFlow - Random string generation with upper case letters and digits](https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits)
-* []()
+* [Suppress InsecureRequestWarning: Unverified HTTPS request is being made in Python2.6](https://stackoverflow.com/questions/27981545/suppress-insecurerequestwarning-unverified-https-request-is-being-made-in-pytho)
 * []()
 * []()
 
@@ -174,10 +175,11 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [ElasticSearch crashing due to auto_create_index problem](https://community.graylog.org/t/elasticsearch-crashing-due-to-auto-create-index-problem/12600)
 * [Elasticsearch - Create or update roles API](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-put-role.html)
 * [Elasticsearch - [security_exception] action [indices:data/read/search] is unauthorized for user [user]](https://discuss.elastic.co/t/security-exception-action-indices-data-read-search-is-unauthorized-for-user-user/164848/3)
+* [Mongo - db.createUser()](https://docs.mongodb.com/manual/reference/method/db.createUser/)
+* [Mongo - security.authorization](https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization)
 * []()
 * []()
 * []()
-
 
 ### Splunk
 * [Dockerhub - splunk/splunk](https://hub.docker.com/r/splunk/splunk/tags)
