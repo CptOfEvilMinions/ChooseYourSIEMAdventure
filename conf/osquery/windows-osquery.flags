@@ -1,0 +1,5 @@
+--host_identifier=uuid
+--config_path=C:\Program Files\osquery\osquery.conf
+--disable_events=true
+--logger_plugin=filesystem
+--logger_min_status=1
