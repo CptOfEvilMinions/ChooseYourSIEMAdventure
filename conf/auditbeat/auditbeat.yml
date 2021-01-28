@@ -1,110 +1,81 @@
-###################### Filebeat Configuration Example #########################
+###################### Auditbeat Configuration Example #########################
 
-# This file is an example configuration file highlighting only the most common
-# options. The filebeat.reference.yml file from the same directory contains all the
-# supported options with more comments. You can use it as a reference.
+# This is an example configuration file highlighting only the most common
+# options. The auditbeat.reference.yml file from the same directory contains all
+# the supported options with more comments. You can use it as a reference.
 #
 # You can find the full configuration reference here:
-# https://www.elastic.co/guide/en/beats/filebeat/index.html
+# https://www.elastic.co/guide/en/beats/auditbeat/index.html
 
-# For more available modules and options, please see the filebeat.reference.yml sample
-# configuration file.
+# =========================== Modules configuration ============================
+auditbeat.modules:
 
-# ============================== Filebeat inputs ===============================
+- module: auditd
+  # Load audit rules from separate files. Same format as audit.rules(7).
+  audit_rule_files: [ '${path.config}/audit.rules.d/*.conf' ]
+  audit_rules: |
+    ## Define audit rules here.
+    ## Create file watches (-w) or syscall audits (-a or -A). Uncomment these
+    ## examples or add your own rules.
 
-filebeat.inputs:
+    ## If you are on a 64 bit platform, everything should be running
+    ## in 64 bit mode. This rule will detect any use of the 32 bit syscalls
+    ## because this might be a sign of someone exploiting a hole in the 32
+    ## bit API.
+    #-a always,exit -F arch=b32 -S all -F key=32bit-abi
 
-# Each - is an input. Most options can be set at the input level, so
-# you can use different inputs for various configurations.
-# Below are the input specific configurations.
+    ## Executions.
+    #-a always,exit -F arch=b64 -S execve,execveat -k exec
 
-- type: log
+    ## External access (warning: these can be expensive to audit).
+    #-a always,exit -F arch=b64 -S accept,bind,connect -F key=external-access
 
-  # Change to true to enable this input configuration.
-  enabled: false
+    ## Identity changes.
+    #-w /etc/group -p wa -k identity
+    #-w /etc/passwd -p wa -k identity
+    #-w /etc/gshadow -p wa -k identity
 
-  # Paths that should be crawled and fetched. Glob based paths.
+    ## Unauthorized access attempts.
+    #-a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -k access
+    #-a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -k access
+
+- module: file_integrity
   paths:
-    - /var/log/*.log
-    #- c:\programdata\elasticsearch\logs\*
+  - /bin
+  - /usr/bin
+  - /sbin
+  - /usr/sbin
+  - /etc
 
-  # Exclude lines. A list of regular expressions to match. It drops the lines that are
-  # matching any regular expression from the list.
-  #exclude_lines: ['^DBG']
+- module: system
+  datasets:
+    - package # Installed, updated, and removed packages
 
-  # Include lines. A list of regular expressions to match. It exports the lines that are
-  # matching any regular expression from the list.
-  #include_lines: ['^ERR', '^WARN']
+  period: 2m # The frequency at which the datasets check for changes
 
-  # Exclude files. A list of regular expressions to match. Filebeat drops the files that
-  # are matching any regular expression from the list. By default, no files are dropped.
-  #exclude_files: ['.gz$']
+- module: system
+  datasets:
+    - host    # General host information, e.g. uptime, IPs
+    - login   # User logins, logouts, and system boots.
+    - process # Started and stopped processes
+    - socket  # Opened and closed sockets
+    - user    # User information
 
-  # Optional additional fields. These fields can be freely picked
-  # to add additional information to the crawled log files for filtering
-  #fields:
-  #  level: debug
-  #  review: 1
+  # How often datasets send state updates with the
+  # current state of the system (e.g. all currently
+  # running processes, all open sockets).
+  state.period: 12h
 
-  ### Multiline options
+  # Enabled by default. Auditbeat will read password fields in
+  # /etc/passwd and /etc/shadow and store a hash locally to
+  # detect any changes.
+  user.detect_password_changes: true
 
-  # Multiline can be used for log messages spanning multiple lines. This is common
-  # for Java Stack Traces or C-Line Continuation
-
-  # The regexp Pattern that has to be matched. The example pattern matches all lines starting with [
-  #multiline.pattern: ^\[
-
-  # Defines if the pattern set under pattern should be negated or not. Default is false.
-  #multiline.negate: false
-
-  # Match can be set to "after" or "before". It is used to define if lines should be append to a pattern
-  # that was (not) matched before or after or as long as a pattern is not matched based on negate.
-  # Note: After is the equivalent to previous and before is the equivalent to to next in Logstash
-  #multiline.match: after
-
-# filestream is an experimental input. It is going to replace log input in the future.
-- type: filestream
-
-  # Change to true to enable this input configuration.
-  enabled: false
-
-  # Paths that should be crawled and fetched. Glob based paths.
-  paths:
-    - /var/log/*.log
-    #- c:\programdata\elasticsearch\logs\*
-
-  # Exclude lines. A list of regular expressions to match. It drops the lines that are
-  # matching any regular expression from the list.
-  #exclude_lines: ['^DBG']
-
-  # Include lines. A list of regular expressions to match. It exports the lines that are
-  # matching any regular expression from the list.
-  #include_lines: ['^ERR', '^WARN']
-
-  # Exclude files. A list of regular expressions to match. Filebeat drops the files that
-  # are matching any regular expression from the list. By default, no files are dropped.
-  #prospector.scanner.exclude_files: ['.gz$']
-
-  # Optional additional fields. These fields can be freely picked
-  # to add additional information to the crawled log files for filtering
-  #fields:
-  #  level: debug
-  #  review: 1
-
-# ============================== Filebeat modules ==============================
-
-filebeat.config.modules:
-  # Glob pattern for configuration loading
-  path: ${path.config}/modules.d/*.yml
-
-  # Set to true to enable config reloading
-  reload.enabled: false
-
-  # Period on which files under path should be checked for changes
-  #reload.period: 10s
+  # File patterns of the login record files.
+  login.wtmp_file_pattern: /var/log/wtmp*
+  login.btmp_file_pattern: /var/log/btmp*
 
 # ======================= Elasticsearch template setting =======================
-
 #setup.template.settings:
   #index.number_of_shards: 1
   #index.codec: best_compression
@@ -142,7 +113,7 @@ filebeat.config.modules:
 
 # Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
 # This requires a Kibana endpoint configuration.
-#setup.kibana:
+# setup.kibana:
 
   # Kibana Host
   # Scheme and port can be left out and will be set to the default (http and 5601)
@@ -157,7 +128,7 @@ filebeat.config.modules:
 
 # =============================== Elastic Cloud ================================
 
-# These settings simplify using Filebeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using Auditbeat with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -207,12 +178,14 @@ output.logstash:
   #ssl.key: "/etc/pki/client/cert.key"
 
 # ================================= Processors =================================
+
+# Configure processors to enhance or manipulate events generated by the beat.
+
 processors:
-  - add_host_metadata:
-      when.not.contains.tags: forwarded
+  - add_host_metadata: ~
   - add_cloud_metadata: ~
   - add_docker_metadata: ~
-  - add_kubernetes_metadata: ~
+
 
 # ================================== Logging ===================================
 
@@ -226,7 +199,7 @@ processors:
 #logging.selectors: ["*"]
 
 # ============================= X-Pack Monitoring ==============================
-# Filebeat can export internal metrics to a central Elasticsearch monitoring
+# Auditbeat can export internal metrics to a central Elasticsearch monitoring
 # cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
 # reporting is disabled by default.
 
@@ -234,7 +207,7 @@ processors:
 #monitoring.enabled: false
 
 # Sets the UUID of the Elasticsearch cluster under which monitoring data for this
-# Filebeat instance will appear in the Stack Monitoring UI. If output.elasticsearch
+# Auditbeat instance will appear in the Stack Monitoring UI. If output.elasticsearch
 # is enabled, the UUID is derived from the Elasticsearch cluster referenced by output.elasticsearch.
 #monitoring.cluster_uuid:
 
@@ -249,12 +222,12 @@ processors:
 
 # ============================== Instrumentation ===============================
 
-# Instrumentation support for the filebeat.
+# Instrumentation support for the auditbeat.
 #instrumentation:
-    # Set to true to enable instrumentation of filebeat.
+    # Set to true to enable instrumentation of auditbeat.
     #enabled: false
 
-    # Environment in which filebeat is running on (eg: staging, production, etc.)
+    # Environment in which auditbeat is running on (eg: staging, production, etc.)
     #environment: ""
 
     # APM Server hosts to report instrumentation results to.
