@@ -1,6 +1,6 @@
+from datetime import datetime, date, timezone
 from requests.auth import HTTPBasicAuth
 from pylogbeat import PyLogBeatClient
-from datetime import datetime, date, timezone
 import argparse
 import requests
 import json
@@ -111,24 +111,53 @@ def check_elasticsearch(siem):
 def check_splunk(siem):  
   """
   """
-  #### Create search job ####
-  search = f'index=default AND \"{siem.random_message}\"'
+  #### Get session key ####
+  session_key = requests.get(
+    url = f"https://{siem.host}:{siem.port}/servicesNS/admin/search/auth/login", 
+    data={'username': siem.siem_username,'password': siem.siem_password, "output_mode": "json"}, 
+    verify=False
+  ).json()['sessionKey']
+  print ("[+] - Obtained session key")
 
-  url =f"http://{siem.host}:{siem.port}/services/search/jobs"
-  r = requests.post(url=url, json=search, auth=HTTPBasicAuth(siem.siem_username, siem.password))
-  job_id = r.text
-
-  #### Get job results ####
-  url =f"http://{siem.host}:{siem.port}/services/search/jobs/{job_id}/results/"
+  
+  search_query = f"search index=main AND \"{siem.random_message}\""
   for i in range(0, siem.retries):
-    result = requests.get(url=url, json=search, data="output_mode=json", auth=HTTPBasicAuth(siem.siem_username, siem.password), verify=False).json()
-    print (result)
-    if int(result['hits']['total']['value']) > 0:
-      return True
+    #### Create search job ####
+    sid = requests.post(url=f"https://{siem.host}:{siem.port}/services/search/jobs/", 
+      data={ "search": search_query, "output_mode": "json"}, 
+	    headers = { 'Authorization': ('Splunk %s' %session_key)},
+	    verify = False
+    ).json()['sid']
+    print (f"[+] - Splunk search job id: {sid}")
+    
+    #### Wait for search job to finish ####
+    done = False
+    while not done:
+      r = requests.get(url=f"https://{siem.host}:{siem.port}/services/search/jobs/{sid}",
+        headers = { 'Authorization': (f"Splunk {session_key}")},
+        data={"output_mode": "json"},
+        verify = False
+      )
+
+      if r.json()['entry'][0]['content']['isDone'] == True:
+        done = True
+      else:
+        time.sleep(1)
+
+    #### Get results from job search ####
+    r = requests.get(url=f"https://{siem.host}:{siem.port}/services/search/jobs/{sid}/results/",
+      headers = { 'Authorization': (f"Splunk {session_key}")},
+      data={'output_mode': 'json'},
+      verify = False
+    )
+
+    for result in r.json()['results']:
+      json_data = json.loads(result['_raw'])
+      if json_data['message'] == siem.random_message:
+        return True
     time.sleep(3)
 
   return False
-
 
 
 if __name__ == "__main__":

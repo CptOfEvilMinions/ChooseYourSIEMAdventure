@@ -19,6 +19,8 @@ services:
     ports:
       - 8000:80
       - 8443:443
+      - 8089:8089
+      - 8088:8088
     depends_on: 
       - splunk
     deploy:
@@ -45,7 +47,6 @@ services:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_ADD=tcp 1514
     ports: 
-      - 8088:8088
       - 9997:9997
     networks: 
       - default

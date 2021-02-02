@@ -37,7 +37,7 @@ services:
 
   ###################################################### Graylog ######################################################
   graylog:
-    image: graylog/graylog:4.0.1
+    image: graylog/graylog:4.0.2
     secrets:
       - source: nginx-tls-cert
         target: /usr/share/graylog/tls/graylog.crt
