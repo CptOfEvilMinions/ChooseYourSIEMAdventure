@@ -2,7 +2,7 @@ version: "3.9"
 services: 
   ###################################################### NGINX ######################################################
   nginx:
-    image: nginx:1.19.6-alpine
+    image: nginx:1.19.7-alpine
     configs:
       - source: nginx-conf
         target: /etc/nginx/nginx.conf
@@ -26,10 +26,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          #cpus: '1'
           memory: 150M
         reservations:
-          cpus: '0.25'
+          #cpus: '0.25'
           memory: 100M
       restart_policy:
         condition: on-failure
@@ -39,17 +39,14 @@ services:
 
   ###################################################### Splunk ######################################################
   splunk:
-    image: splunk/splunk:8.1.1-debian
+    image: splunk/splunk:8.1.2-debian
     secrets:
       - source: splunk-default-conf
         target: /tmp/defaults/default.yml
     environment:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_ADD=tcp 1514
-    ports: 
-      - 9997:9997
     networks: 
-      - default
       - splunk-backend
     volumes: 
       - splunk-var:/opt/splunk/var
@@ -57,10 +54,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
+          #cpus: '4'
           memory: 1G
         reservations:
-          cpus: '1'
+          #cpus: '1'
           memory: 500M
       restart_policy:
         condition: on-failure
@@ -70,7 +67,7 @@ services:
 
   ###################################################### Logstash ######################################################
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.0
+    image: docker.elastic.co/logstash/logstash:7.11.1
     environment: 
        - xpack.monitoring.enabled=false
     configs:
@@ -104,14 +101,14 @@ services:
     ports:
       - 5044:5044
     depends_on: 
-     - splunk
+      - splunk-heavy-forwarder
     deploy:
       resources:
         limits:
-          cpus: '4'
+          #cpus: '4'
           memory: 1G
         reservations:
-          cpus: '1'
+          #cpus: '1'
           memory: 500M
       restart_policy:
         condition: on-failure

@@ -200,6 +200,8 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Mutate filter plugin](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
 * [Splunk Add-on for NetApp Data ONTAP](https://docs.splunk.com/Documentation/AddOns/released/NetApp/Configureinputs)
 * [Github issue - Not able to disable XPack from Docker Compose #127](https://github.com/elastic/elasticsearch-docker/issues/127)
+* [How can I run searches against the Splunk API?](https://community.splunk.com/t5/Splunk-Search/How-can-I-run-searches-against-the-Splunk-API/m-p/88096)
+* [Is there any way via REST to get JSON raw data from Splunk for a given query?](https://community.splunk.com/t5/Getting-Data-In/Is-there-any-way-via-REST-to-get-JSON-raw-data-from-Splunk-for-a/m-p/165722)
 * []()
 * []()
 * []()
