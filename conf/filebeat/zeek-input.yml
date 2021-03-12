@@ -1,0 +1,6 @@
+- type: log
+  paths:
+    - /opt/zeek/logs/current/json_streaming_*.log
+  json.keys_under_root: false
+  service:
+      type: zeek

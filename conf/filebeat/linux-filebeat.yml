@@ -93,6 +93,12 @@ filebeat.inputs:
 
 # ============================== Filebeat modules ==============================
 
+filebeat.config.inputs:
+  enabled: true
+  path: inputs.d/*.yml
+
+# ============================== Filebeat modules ==============================
+
 filebeat.config.modules:
   # Glob pattern for configuration loading
   path: ${path.config}/modules.d/*.yml

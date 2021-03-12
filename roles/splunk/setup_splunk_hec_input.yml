@@ -1,0 +1,22 @@
+#####################################################################
+# Create Splunk Syslog input
+#####################################################################
+- name: Generate random string for HEC token
+
+- name: Copy Splunk HEC input.conf
+  template:
+    src: conf/ansible/splunk/splunk-hec-zeek.conf
+    dest: '/opt/splunk/etc/apps/splunk_httpinput/default/inputs.conf'
+    owner: 'splunk'
+    group: 'splunk'
+    mode: 0644
+
+- name: Create Splunk indexes
+  
+
+
+- name: Restart Splunk service
+  service:
+    name: 'splunk'
+    enabled: yes
+    state: restarted

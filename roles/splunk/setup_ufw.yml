@@ -27,6 +27,12 @@
 - name: Allow Splunk API
   ufw:
     rule: allow
+    port: '8088'
+    proto: tcp
+
+- name: Allow Splunk API
+  ufw:
+    rule: allow
     port: '8089'
     proto: tcp
 

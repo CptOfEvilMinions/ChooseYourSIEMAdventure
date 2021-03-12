@@ -31,10 +31,11 @@
   shell: /opt/splunk/bin/splunk enable boot-start --accept-license --answer-yes --no-prompt --seed-passwd {{ siem_password }}
   when: not ldap_config.stat.exists
 
-- name: Set Splunk to listen on localhost
+- name: Set Splunk webGUI to listen on localhost
   lineinfile:
-    path: '/opt/splunk/etc/splunk-launch.conf'
-    line: 'SPLUNK_BINDIP=127.0.0.1'
+    path: '/opt/splunk/etc/system/default/web.conf'
+    regexp: '^# server.socket_host ='
+    line: 'server.socket_host = localhost'
     create: yes
 
 - name: Restart Splunk service
