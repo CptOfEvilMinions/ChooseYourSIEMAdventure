@@ -20,7 +20,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 ## Supported versions
 * `Graylog v4.0.1`
 * `Elastic v7.10`
-* `Splunk v7.0.8`
+* `Splunk v8.1.2`
 * `Ansible v2.11+`
 * `Ubuntu 20.04 64-bit`
 
@@ -31,8 +31,6 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * []()
 * []()
 * []()
-
-
 
 ### Ansible
 * [ansible.builtin.reboot – Reboot a machine](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/reboot_module.html)
@@ -80,7 +78,6 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Suppress InsecureRequestWarning: Unverified HTTPS request is being made in Python2.6](https://stackoverflow.com/questions/27981545/suppress-insecurerequestwarning-unverified-https-request-is-being-made-in-pytho)
 * []()
 * []()
-
 
 ### Elastic stack
 * [CptOfEvilMinions/BlogProjects](https://github.com/CptOfEvilMinions/BlogProjects/tree/master/ElasticStackv7)
