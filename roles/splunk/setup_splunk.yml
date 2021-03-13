@@ -1,5 +1,5 @@
 ####################################################################
-# Install Splunk  
+# Install/Setup Splunk  
 ####################################################################
 - name: Stat Splunk download
   stat:
@@ -8,7 +8,7 @@
 
 - name: Download Splunk
   get_url:
-    url: '{{ SPLUNK_DL_URL }}'
+    url: '{{ splunk_dl_url }}'
     dest: '/tmp/splunk-{{ splunk_version }}-linux-2.6-amd64.deb'
   when: not splunk_dl.stat.exists
 
@@ -43,3 +43,15 @@
     name: 'splunk'
     enabled: yes
     state: restarted
+
+- name: Splunk healthcheck
+  uri:
+    url: "http://127.0.0.1:8000/en-US/"
+    follow_redirects: safe
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

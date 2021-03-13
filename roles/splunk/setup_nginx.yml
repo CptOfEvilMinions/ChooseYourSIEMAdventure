@@ -30,25 +30,41 @@
     owner: root
     group: root
     mode: 0644
-  
-- name: Copy public cert for splunk
+
+- name: Copy Self-signed public cert for NGINX
   template:
-    src: 'conf/tls/docker.key'
+    src: '{{ item }}'
     dest: '/etc/ssl/private/nginx.key'
     owner: 'root'
     group: 'root'
     mode: 0400
+  with_fileglob:
+    - conf/tls/*.key
 
-- name: Copy private key for splunk
+- name: Copy Self-signed private key for NGINX
   template:
-    src: 'conf/tls/docker.crt'
+    src: '{{ item }}'
     dest: '/etc/ssl/certs/nginx.crt'
     owner: 'root'
     group: 'root'
     mode: 0644
+  with_fileglob:
+    - 'conf/tls/*.crt'
 
 - name: Start Nginx service
   service:
     name: nginx
     state: restarted
     enabled: yes
+
+- name: NGINX healthcheck
+  uri:
+    url: "https://127.0.0.1:443/en-US/account/login?return_to=%2Fen-US%2F"
+    follow_redirects: none
+    method: GET
+    validate_certs: 'no'
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

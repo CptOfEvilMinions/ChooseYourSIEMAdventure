@@ -41,3 +41,28 @@
     rule: allow
     port: '9997'
     proto: tcp
+
+- name: NGINX + Splunk webGUI healthcheck
+  uri:
+    url: "https://{{ ansible_default_ipv4.address }}:443/en-US/"
+    follow_redirects: safe
+    method: GET
+    validate_certs: 'no'
+    status_code: 200
+    remote_src: yes
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
+
+- name: NGINX + Splunk HEC healthcheck
+  uri:
+    url: "http://{{ ansible_default_ipv4.address }}:8088/services/collector/health"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
