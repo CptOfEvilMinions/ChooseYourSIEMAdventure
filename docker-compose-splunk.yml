@@ -23,14 +23,14 @@ services:
 
   ###################################################### Splunk ######################################################
   splunk:
-    image: splunk/splunk:${SPLUNK_VERSION}
     container_name: 'siem-splunk-splunk'
     restart: unless-stopped
+    image: splunk/splunk:${SPLUNK_VERSION}
     environment:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_HEC_TOKEN=${SIEM_PASSWORD}
       - SPLUNK_PASSWORD=${SIEM_PASSWORD}
-      - SPLUNK_ADD=tcp 1514
+      - SPLUNK_HEC_SSL=false
     ports: 
       - 9997:9997
     networks: 
@@ -51,6 +51,7 @@ services:
       dockerfile: docker/splunk/Dockerfile-logstash
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION} 
+        HEC_TOKEN: ${SIEM_PASSWORD}
     environment: 
       - "XPACK_MONITORING_ENABLED=false"
     ports: 

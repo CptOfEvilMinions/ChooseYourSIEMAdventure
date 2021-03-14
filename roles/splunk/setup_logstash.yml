@@ -35,8 +35,8 @@
   template:
     src: '{{ item }}'
     dest: '/etc/logstash/tls/logstash.key'
-    owner: 'root'
-    group: 'root'
+    owner: 'logstash'
+    group: 'logstash'
     mode: 0400
   with_fileglob:
     - conf/tls/*.key
@@ -45,8 +45,8 @@
   template:
     src: '{{ item }}'
     dest: '/etc/logstash/tls/logstash.crt'
-    owner: 'root'
-    group: 'root'
+    owner: 'logstash'
+    group: 'logstash'
     mode: 0644
   with_fileglob:
     - 'conf/tls/*.crt'

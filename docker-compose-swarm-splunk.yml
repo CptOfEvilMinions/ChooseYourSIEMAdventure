@@ -45,12 +45,14 @@ services:
         target: /tmp/defaults/default.yml
     environment:
       - SPLUNK_START_ARGS=--accept-license
-      - SPLUNK_ADD=tcp 1514
     networks: 
+      - default
       - splunk-backend
     volumes: 
       - splunk-var:/opt/splunk/var
       - splunk-etc:/opt/splunk/etc
+    ports:
+      - 9997:9997
     deploy:
       resources:
         limits:
@@ -68,22 +70,20 @@ services:
   ###################################################### Logstash ######################################################
   logstash:
     image: docker.elastic.co/logstash/logstash:7.11.1
+    entrypoint: /usr/share/logstash/logstash-entrypoint.sh
     environment: 
-       - xpack.monitoring.enabled=false
-    configs:
+      - xpack.monitoring.enabled=false
+    configs: 
+      #### entrypoint ###
+      - source: logstash-entrypoint
+        target: /usr/share/logstash/logstash-entrypoint.sh
+        mode: 0755
       #### inputs ####
       - source: logstash-input-conf
-        target: /usr/share/logstash/pipeline/logstash.conf
-      #### filters ####
-      - source: logstash-filter-zeek-conf
-        target: /usr/share/logstash/pipeline/10-filter-zeek.conf
-      - source: logstash-filter-sysmon-conf
-        target: /usr/share/logstash/pipeline/11-filter-sysmon.conf
-      - source: logstash-filter-osquery-conf
-        target: /usr/share/logstash/pipeline/13-filter-osquery.conf
+        target: /usr/share/logstash/pipeline/02-input-beats.conf
       #### outputs ####
-      - source: logstas-output-splunk-syslog-conf
-        target: /usr/share/logstash/pipeline/30-output-splunk-syslog.conf
+      - source: logstash-output-splunk-hec-conf
+        target: /usr/share/logstash/templates/30-output-splunk-hec.conf
     secrets:
       - source: nginx-tls-cert
         target: /etc/pki/tls/certs/logstash.crt
@@ -95,6 +95,7 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0400
+      - splunk-hec-token
     networks: 
       - default
       - splunk-backend 
@@ -128,16 +129,12 @@ configs:
     file: ./conf/docker/nginx/nginx.conf
   nginx-splunk-conf:
     file: ./conf/docker/nginx/splunk.conf
+  logstash-entrypoint:
+    file: ./conf/docker/splunk/logstash-swarm-entrypoint.sh
   logstash-input-conf:
     file: ./conf/docker/splunk/02-input-beats.conf
-  logstash-filter-zeek-conf:
-    file: ./conf/logstash_filters/10-filter-zeek.conf
-  logstash-filter-sysmon-conf:
-    file: ./conf/logstash_filters/11-filter-sysmon.conf
-  logstash-filter-osquery-conf:
-    file: ./conf/logstash_filters/13-filter-osquery.conf
-  logstas-output-splunk-syslog-conf:
-    file: ./conf/docker/splunk/30-output-splunk-syslog.conf
+  logstash-output-splunk-hec-conf:
+    file: ./conf/docker/splunk/30-output-splunk-hec.conf
 
 secrets:
   nginx-tls-cert:
@@ -145,4 +142,6 @@ secrets:
   nginx-tls-key:
     file: ./conf/tls/tls.key
   splunk-default-conf:
+    external: true
+  splunk-hec-token:
     external: true

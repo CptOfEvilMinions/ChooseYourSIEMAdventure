@@ -1,6 +1,8 @@
 ARG ELASTIC_VERSION
 FROM docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
 
+ARG HEC_TOKEN
+
 # Instal Logstash plugins
 RUN logstash-plugin install logstash-filter-json_encode
 
@@ -16,6 +18,6 @@ USER logstash
 
 # Copy pipeline configs
 RUN rm /usr/share/logstash/pipeline/logstash.conf
-COPY conf/logstash_filters/ /usr/share/logstash/pipeline
 COPY conf/docker/splunk/02-input-beats.conf /usr/share/logstash/pipeline/02-input-beats.conf
-COPY conf/docker/splunk/30-output-splunk-syslog.conf /usr/share/logstash/pipeline/30-output-splunk-syslog.conf
+COPY conf/docker/splunk/30-output-splunk-hec.conf /usr/share/logstash/pipeline/30-output-splunk-hec.conf
+RUN sed -i "s/{{ SPLUNK_ZEEK_HEC_TOKEN }}/${HEC_TOKEN}/g" /usr/share/logstash/pipeline/30-output-splunk-hec.conf

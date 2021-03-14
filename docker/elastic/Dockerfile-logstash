@@ -3,9 +3,6 @@ FROM docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
 ARG SIEM_USERNAME
 ARG SIEM_PASSWORD
 
-ARG SIEM_ENV
-ARG OUTPUT_CONFIG
-
 # Instal Logstash plugins
 RUN logstash-plugin install logstash-filter-json_encode
 
