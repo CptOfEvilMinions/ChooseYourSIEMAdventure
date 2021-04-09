@@ -1,0 +1,198 @@
+version: "3.9"
+services: 
+  ###################################################### Kibana ######################################################
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.0
+    entrypoint: /docker-entrypoint-initdb.d/kibana-entrypoint.sh
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kibana.rule=Host(`siem.hackinglab.local`)"
+      - "traefik.http.routers.kibana.tls=true"
+      - "traefik.docker.network=traefik_traefik-net"
+    secrets:
+      - elastic-builtin-kibana_system
+    configs:
+      - source: kibana-entrypoint
+        target: /docker-entrypoint-initdb.d/kibana-entrypoint.sh
+        mode: 0755
+    environment:
+      - SERVER_NAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - MONITORING_ENABLED=false
+      - LOGGING_QUIET=true
+    networks: 
+      - traefik_traefik-net
+      - elastic-backend 
+    depends_on: 
+      - elasticsearch
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+  ###################################################### Elasticsearch ######################################################
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
+    #command: ["eswrapper", ";", "whoami", ";", "/usr/share/elasticsearch/elasticsearch-entrypoint.sh",  ";", "whoami"] 
+    configs: 
+      #### entrypoint ###
+      - source: elasticsearch-entrypoint
+        target: /usr/share/elasticsearch/elasticsearch-entrypoint.sh
+        mode: 0755
+    secrets:
+      - source: elastic-builtin-elastic
+        mode: 0400
+      - elastic-builtin-kibana_system
+      - elastic-builtin-logstash_system
+      - elastic-builtin-logstash_writer
+      - elastic-builtin-beats_system
+      - elastic-builtin-apm_system
+      - elastic-builtin-remote_monitoring_user        
+    environment: 
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - xpack.security.enabled=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD_FILE=/run/secrets/elastic-builtin-elastic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 9200:9200
+    volumes: 
+      - elastic-es-data:/usr/share/elasticsearch/data
+      - elastic-es-config:/usr/share/elasticsearch/config
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 300M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+  ###################################################### Logstash ######################################################
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.12.0
+    entrypoint: /usr/share/logstash/logstash-entrypoint.sh
+    configs: 
+      #### entrypoint ###
+      - source: logstash-entrypoint
+        target: /usr/share/logstash/logstash-entrypoint.sh
+        mode: 0755
+      #### inputs ####
+      - source: logstash-input-conf
+        target: /usr/share/logstash/pipeline/02-input-beats.conf
+      #### filters ####
+      - source: logstash-filter-zeek-conf
+        target: /usr/share/logstash/pipeline/10-filter-zeek.conf
+      - source: logstash-filter-sysmon-conf
+        target: /usr/share/logstash/pipeline/11-filter-sysmon.conf
+      - source: logstash-filter-osquery-conf
+        target: /usr/share/logstash/pipeline/13-filter-osquery.conf
+      #### outputs ####
+      - source: logstas-output-elasticsearch-conf
+        target: /usr/share/logstash/templates/30-output-elasticsearch.conf 
+    secrets:
+      - elastic-builtin-logstash_system
+      - elastic-builtin-logstash_writer
+      - source: nginx-tls-cert
+        target: /etc/pki/tls/certs/logstash.crt
+        uid: '1000'
+        gid: '1000'
+        mode: 0644
+      - source: nginx-tls-key
+        target: /etc/pki/tls/private/logstash.key
+        uid: '1000'
+        gid: '1000'
+        mode: 0400
+    networks: 
+      - default
+      - elastic-backend 
+    ports:
+      - 5044:5044
+    depends_on: 
+     - elasticsearch
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 50
+        window: 120s
+
+volumes: 
+  elastic-es-data:
+  elastic-es-config:
+
+networks: 
+  elastic-backend:
+  traefik_traefik-net:
+    external: true
+    
+configs:
+  nginx-conf:
+    file: ./conf/docker/nginx/nginx.conf
+  nginx-kibana-conf:
+    file: ./conf/docker/nginx/kibana.conf
+  logstash-input-conf:
+    file: ./conf/docker/elastic/02-input-beats.conf
+  logstash-filter-zeek-conf:
+    file: ./conf/logstash_filters/10-filter-zeek.conf
+  logstash-filter-sysmon-conf:
+    file: ./conf/logstash_filters/11-filter-sysmon.conf
+  logstash-filter-osquery-conf:
+    file: ./conf/logstash_filters/13-filter-osquery.conf
+  logstas-output-elasticsearch-conf:
+    file: ./conf/docker/elastic/30-output-elasticsearch.conf
+  kibana-entrypoint:
+    file: ./conf/docker/elastic/kibana-swam-entrypoint.sh
+  logstash-entrypoint:
+    file: ./conf/docker/elastic/logstash-swarm-entrypoint.sh
+  elasticsearch-entrypoint:
+    file: ./conf/docker/elastic/elasticsearch-swarm-entrypoint.sh
+
+secrets:
+  nginx-tls-cert:
+    file: ./conf/tls/tls.crt
+  nginx-tls-key:
+    file: ./conf/tls/tls.key
+  elastic-builtin-elastic:
+    external: true
+  elastic-builtin-kibana_system:
+    external: true
+  elastic-builtin-logstash_system:
+    external: true
+  elastic-builtin-logstash_writer:
+    external: true
+  elastic-builtin-beats_system:
+    external: true
+  elastic-builtin-apm_system:
+    external: true
+  elastic-builtin-remote_monitoring_user:
+    external: true
