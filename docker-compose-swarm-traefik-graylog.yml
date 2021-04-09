@@ -1,43 +1,16 @@
 version: "3.9"
 services: 
-  ###################################################### NGINX ######################################################
-  nginx:
-    image: nginx:1.19.9-alpine
-    configs:
-      - source: nginx-conf
-        target: /etc/nginx/nginx.conf
-      - source: nginx-graylog-conf
-        target: /etc/nginx/conf.d/graylog.conf
-    secrets:
-      - source: nginx-tls-cert
-        target: /etc/ssl/certs/nginx.crt
-      - source: nginx-tls-key
-        target: /etc/ssl/private/nginx.key
-    networks: 
-      - default
-      - graylog-backend 
-    ports:
-      - 8000:80
-      - 8443:443
-    depends_on: 
-      - graylog
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 150M
-        reservations:
-          cpus: '0.25'
-          memory: 100M
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 50
-        window: 120s
-
   ###################################################### Graylog ######################################################
   graylog:
     image: graylog/graylog:4.0.6
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.graylog.rule=Host(`graylog.hackinglab.local`)"
+      - "traefik.http.routers.graylog.tls=true"
+      - "traefik.port=9000"
+      - "traefik.docker.network=traefik_traefik-net"
+      - "traefik.http.routers.graylog.middlewares=graylog-header"
+      - "traefik.http.middlewares.graylog-header.headers.customresponseheaders.X-Graylog-Server-URL=https://graylog.hackinglab.local/"
     secrets:
       - source: nginx-tls-cert
         target: /usr/share/graylog/tls/graylog.crt
@@ -58,6 +31,7 @@ services:
       #- GRAYLOG_ELASTICSEARCH_HOSTS=http://elastic:es-password@elasticsearch:9200
       #- GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:graylog-password@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+      - GRAYLOG_HTTP_EXTERNAL_URI=https://graylog.hackinglab.local/
       - GRAYLOG_ROOT_PASSWORD_SHA2__FILE=/run/secrets/graylog-root-password-sha2
       - GRAYLOG_ELASTICSEARCH_HOSTS__FILE=/run/secrets/graylog-es-uri
       - GRAYLOG_MONGODB_URI__FILE=/run/secrets/graylog-mongo-uri
@@ -65,6 +39,7 @@ services:
       - 5044:5044
     networks: 
       - default
+      - traefik_traefik-net
       - graylog-backend 
     depends_on: 
       - mongo
@@ -155,6 +130,8 @@ services:
 
 networks: 
   graylog-backend:
+  traefik_traefik-net:
+    external: true
 
 volumes: 
   graylog-es-data:
