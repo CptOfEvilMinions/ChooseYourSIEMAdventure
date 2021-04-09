@@ -16,4 +16,15 @@ echo 'elasticsearch.password: "${elasticsearch.password}"' >> /usr/share/kibana/
 cat /usr/share/kibana/config/kibana.yml
 
 #### Start Kibana ####
-/usr/local/bin/dumb-init /usr/local/bin/kibana-docker
+if [ -f "/usr/local/bin/dumb-init" ];
+then
+    echo "[+] - Using dumb-init to start Kibana"
+    /usr/local/bin/dumb-init /usr/local/bin/kibana-docker
+elif [ -f "/bin/tini" ];
+then
+    echo "[+] - Using tini to start Kibana"
+    /bin/tini /usr/local/bin/kibana-docker
+else
+    echo "[-] - Unknown method to start Kibana - exitting"
+    exit 1
+fi 
