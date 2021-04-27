@@ -1,0 +1,2 @@
+pylogbeat==2.0.0
+elasticsearch==7.10.0
