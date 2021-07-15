@@ -21,6 +21,10 @@
     rule: allow
     port: '5044'
     proto: tcp
+  
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
 
 - name: NGINX healthcheck
   uri:

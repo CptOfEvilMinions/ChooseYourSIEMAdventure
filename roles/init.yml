@@ -29,6 +29,7 @@
 - name: Update all packages to the latest version
   apt:
     upgrade: dist
+  register: update
 
 ####################################################################
 # Reboot
@@ -36,6 +37,7 @@
 - name: Reboot a slow machine that might have lots of updates to apply
   reboot:
     reboot_timeout: 3600
+  when: update.changed == True
     
 ####################################################################
 # Install software
