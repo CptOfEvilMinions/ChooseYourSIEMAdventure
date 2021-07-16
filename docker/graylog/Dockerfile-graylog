@@ -7,6 +7,10 @@ ARG SIEM_PASSWORD
 RUN mkdir /usr/share/graylog/tls
 COPY conf/tls/*.crt /usr/share/graylog/tls/graylog.crt
 COPY conf/tls/*.key /usr/share/graylog/tls/graylog.key
+USER root
+RUN chown root:graylog /usr/share/graylog/tls/graylog.key && \
+    chmod 640 /usr/share/graylog/tls/graylog.key
+USER graylog
 
 # Copy BEATS input script
 COPY conf/docker/graylog/generate_beats_input.sh /usr/share/graylog/generate_beats_input.sh
