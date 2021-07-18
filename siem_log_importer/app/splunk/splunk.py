@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.models import SIEM
+from app.models import SplunkSIEM
 import requests
 import pandas as pd
 import typing
@@ -7,7 +7,7 @@ import urllib3
 import json
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def signIn(siem: SIEM) -> str:
+def signIn(siem: SplunkSIEM) -> str:
     """
     Sign into Splunk and return session key
     """
@@ -23,7 +23,7 @@ def signIn(siem: SIEM) -> str:
     return session_key
 
 
-def indexExists(siem: SIEM) -> bool:
+def indexExists(siem: SplunkSIEM) -> bool:
     """
     https://github.com/splunk/splunk-sdk-python/blob/master/examples/index.py
     https://docs.splunk.com/DocumentationStatic/PythonSDK/1.6.5/client.html#splunklib.client.Indexes.delete
@@ -49,7 +49,7 @@ def indexExists(siem: SIEM) -> bool:
     return False
 
 
-def createIndex(siem: SIEM):
+def createIndex(siem: SplunkSIEM):
     """
     Use the Splunk API to create an index
     https://docs.splunk.com/Documentation/Splunk/8.2.1/Indexer/Setupmultipleindexes
@@ -65,7 +65,7 @@ def createIndex(siem: SIEM):
         raise SystemExit(err)
     print (f"[+] - {datetime.now()} - Created {siem.Index} index on Splunk")
 
-def hecInputExists(siem: SIEM) -> typing.Tuple[bool, str, str]:
+def hecInputExists(siem: SplunkSIEM) -> typing.Tuple[bool, str, str]:
     """
     Use the Splunk API to list HEC inputs
     https://docs.splunk.com/Documentation/Splunk/8.2.1/Data/HTTPEventCollectortokenmanagement
@@ -89,7 +89,7 @@ def hecInputExists(siem: SIEM) -> typing.Tuple[bool, str, str]:
                 return True, hecInput['content']['token'], hecInput['name']
     return False, "", ""
 
-def createHECinput(siem: SIEM) -> typing.Tuple[str, str]:
+def createHECinput(siem: SplunkSIEM) -> typing.Tuple[str, str]:
     """
     Use the Splunk API to create HEC input
     https://docs.splunk.com/Documentation/Splunk/8.2.1/Data/HTTPEventCollectortokenmanagement
@@ -101,7 +101,7 @@ def createHECinput(siem: SIEM) -> typing.Tuple[str, str]:
             data = { 
                         "name": f"{siem.Index}_hec_token", 
                         "index": f"{siem.Index}",
-                        "sourcetype": "_json",
+                        "sourcetype": f"{siem.Sourcetype}",
                         "output_mode": "json"
                     },
             verify=False
@@ -110,7 +110,7 @@ def createHECinput(siem: SIEM) -> typing.Tuple[str, str]:
         raise SystemExit(err)
     return r['entry'][0]['name'], r['entry'][0]['content']['token']
 
-def deleteHECinput(siem: SIEM):
+def deleteHECinput(siem: SplunkSIEM):
     """
     Use the Splunk API to delete HEC input
     https://docs.splunk.com/Documentation/Splunk/8.2.1/Data/HTTPEventCollectortokenmanagement
@@ -128,7 +128,7 @@ def deleteHECinput(siem: SIEM):
     if r.status_code == 200:
         print (f"[*] - {datetime.now()} - HEC input {siem.Index}_hec_token has been deleted")
 
-def streamJsonFileUpload(siem: SIEM, hecURL: str, hecToken: str):
+def streamJsonFileUpload(siem: SplunkSIEM, hecURL: str, hecToken: str):
     # Create request stream session
     s = requests.Session()
 
@@ -141,10 +141,15 @@ def streamJsonFileUpload(siem: SIEM, hecURL: str, hecToken: str):
         counter = 0
         chunksize = 1000
         reader = pd.read_json(jsonFile, orient="records", lines=True, chunksize=chunksize)
-        osqueryEvents = list()
         for chunk in reader:
             # Convert Pandas dataframe to JSON list
-            logEvents = json.loads(chunk['json'].to_json(orient="records"))
+            logEvents = list()
+            if "json" in chunk.index:
+                logEvents = json.loads(chunk['json'].to_json(orient="records"))
+            else:
+                d = json.loads(chunk.to_json(orient="records"))
+                for logEvent in d:
+                    logEvents.append( {"json": logEvent} )
 
             # Iterate over all events
             splunkHECevents = str()
@@ -153,7 +158,7 @@ def streamJsonFileUpload(siem: SIEM, hecURL: str, hecToken: str):
 
             # Post log event BATCH
             s.post(
-                url=f"https://{siem.Host}:8088/services/collector",
+                url=f"https://{siem.Host}:{siem.Ingest_port}/services/collector",
                 data=splunkHECevents,
                 verify=False
             )
@@ -163,8 +168,8 @@ def streamJsonFileUpload(siem: SIEM, hecURL: str, hecToken: str):
             print (f"[+] - {datetime.now()} - Uploaded {counter} events")  
 
 
-def ImportLogs(siem: SIEM):
-    print (f"[*] - {datetime.now()} - Import logs into Splunk")
+def ImportLogs(siem: SplunkSIEM):
+    print (f"[*] - {datetime.now()} - Importing logs into Splunk")
 
     # Sign into Splunk
     siem.SessionKey = signIn(siem)
