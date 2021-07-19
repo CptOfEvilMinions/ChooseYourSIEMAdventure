@@ -1,0 +1,23 @@
+####################################################################
+# Install/Setup Kafka
+####################################################################
+- name: Copy Kafka config
+  template:
+    src: 'conf/ansible/ingestor/kafka/server.properties'
+    dest: '/etc/kafka/server.properties'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  register: kafka_config
+
+- name: Start and enable Kafka
+  service:
+    name: 'confluent-server'
+    enabled: yes
+    state: restarted
+  when: kafka_config.changed
+
+- name: Kafka healthcheck
+  wait_for:
+    port: 29092
+    delay: 10

@@ -1,0 +1,25 @@
+####################################################################
+# Setup kafka as the input
+####################################################################
+- name: Copy Kafka input config
+  template:
+    src: 'conf/elastic/03-input-kafka.conf'
+    dest: '/etc/logstash/conf.d/03-input-kafka.conf'
+    owner: logstash
+    group: logstash
+
+- name: Remove BEATs input
+  file:
+    path: "/etc/logstash/conf.d/{{ item }}"
+    state: absent
+  with_items:
+    - '02-input-beats.conf'
+    - '10-filter-zeek.conf'
+    - '11-filter-sysmon.conf'
+    - '13-filter-osquery.conf'
+
+- name: Restart Logstash
+  service:
+    name: logstash
+    enabled: yes
+    state: restarted

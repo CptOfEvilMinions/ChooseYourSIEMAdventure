@@ -1,0 +1,42 @@
+#####################################################################
+# Install Confluent
+#####################################################################
+- name: Add Confluent GPG key
+  apt_key:
+    url: "{{ confluent_gpg_key }}"
+    state: present
+
+- name: Add Confluet repo
+  apt_repository:
+    repo: "{{ confluent_repo_url }}"
+    state: present
+
+- name: Install Confluent suite
+  apt:
+    name: ['default-jdk','confluent-platform={{ confluent_version }}.0-1']
+    state: present
+
+#####################################################################
+# Setup Zookeeper
+#####################################################################
+- name: Copy Zookeeper config
+  template:
+    src: 'conf/ansible/ingestor/zookeeper/zookeeper.properties'
+    dest: '/etc/kafka/zookeeper.properties'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+
+- name: Restart Zookeeper
+  service:
+    name: 'confluent-zookeeper'
+    enabled: yes
+    state: restarted
+
+- name: Zookeeper healthcheck
+  wait_for:
+    port: 2182
+    delay: 10
+
+
+

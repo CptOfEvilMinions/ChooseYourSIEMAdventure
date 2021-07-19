@@ -15,7 +15,7 @@ def streamJsonFileUpload(siem: LogstashSIEM) -> None:
         reader = pd.read_json(jsonFile, orient="records", lines=True, chunksize=chunksize)
 
         # Create Logstash connector
-        client = PyLogBeatClient(siem.Host, siem.Ingest_port, ssl_enable=True, ssl_verify=False)
+        client = PyLogBeatClient(siem.Host, siem.IngestPort, ssl_enable=True, ssl_verify=False)
         client.connect()
 
         for chunk in reader:
@@ -26,7 +26,7 @@ def streamJsonFileUpload(siem: LogstashSIEM) -> None:
             else:
                 d = json.loads(chunk.to_json(orient="records"))
                 for logEvent in d:
-                    logEvents.append( {"json": logEvent} )
+                   logEvents.append( {"json": logEvent} )
             
             # Send logs to Logstash
             client.send(logEvents)

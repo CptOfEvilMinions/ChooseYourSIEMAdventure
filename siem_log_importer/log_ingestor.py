@@ -60,7 +60,11 @@ if __name__ == "__main__":
         )
         splunk.ImportLogs(siem)
     elif platform == "logstash":
-        siem = LogstashSIEM(args.siem_host, args.log_file, args.ingest_port)
+        siem = LogstashSIEM(
+            args.siem_host, 
+            args.log_file, 
+            args.ingest_port
+        )
         logstash.ImportLogs(siem)  
     elif platform == "elasticsearch":
         siem = ElasticsearchSIEM(
@@ -71,7 +75,7 @@ if __name__ == "__main__":
             args.threads, 
             args.siem_username, 
             args.siem_password
-            )
+        )
         elasticsearch.ImportLogs(siem)
     else:
         print ("Please select a valid platform to ingest logs")

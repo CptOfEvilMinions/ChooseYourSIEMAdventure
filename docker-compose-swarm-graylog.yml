@@ -2,7 +2,7 @@ version: "3.9"
 services: 
   ###################################################### NGINX ######################################################
   nginx:
-    image: nginx:1.19.9-alpine
+    image: nginx:1.20.1-alpine
     configs:
       - source: nginx-conf
         target: /etc/nginx/nginx.conf
@@ -37,7 +37,7 @@ services:
 
   ###################################################### Graylog ######################################################
   graylog:
-    image: graylog/graylog:4.0.6
+    image: graylog/graylog:4.1.1
     secrets:
       - source: nginx-tls-cert
         target: /usr/share/graylog/tls/graylog.crt
@@ -116,7 +116,7 @@ services:
 
   ###################################################### Elasticsearch ######################################################
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
     secrets:
       - source: graylog-elasticsearch-password
         MODE: 0400

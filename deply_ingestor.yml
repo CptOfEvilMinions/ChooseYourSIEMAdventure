@@ -1,0 +1,23 @@
+- hosts: 'ingestor'
+  become: yes
+  become_user: root
+  tasks:
+    - include_vars: 'group_vars/ingestor.yml'             
+    - import_tasks: 'roles/init.yml'                        # Init Linux
+    - import_tasks: 'roles/ingestor/setup_zookeeper.yml'    # Install/Setup Zookeeper
+    - import_tasks: 'roles/ingestor/setup_kafka.yml'        # Install/Setup Kafka
+    - import_tasks: 'roles/ingestor/setup_logstash.yml'     # Install/Setup Logstash
+    - import_tasks: 'roles/ingestor/setup_ufw.yml'          # Setup UFW
+
+    #### Setup Elastic ####
+    #- import_tasks: 'roles/ingestor/setup_elastic.yml'
+    #  delegate_to: "{{ groups.elastic[0] }}"
+
+    #### Setup Graylog ####
+    #- import_tasks: 'roles/ingestor/setup_graylog.yml'
+    #  delegate_to: "{{ groups.graylog[0] }}"
+
+    #### Setup Splunk ####
+    # Create Splunk HEC inputs
+    #- import_tasks: 'roles/ingestor/setup_splunk.yml'
+    #  delegate_to: "{{ groups.splunk[0] }}"

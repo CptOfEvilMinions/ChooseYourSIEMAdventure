@@ -1,0 +1,17 @@
+###################################################### Ingestor ######################################################
+hostname: 'ingestor'
+
+###################################################### Confluent ######################################################
+confluent_version: 6.2
+confluent_gpg_key: "https://packages.confluent.io/deb/{{ confluent_version }}/archive.key"
+confluent_repo_url: "deb [arch=amd64] https://packages.confluent.io/deb/{{ confluent_version }} stable main"
+
+kafka_log_retention_hours: 4
+kafka_log_retention_bytes: 1000000000 # 10GBs
+kakfa_log_cleaner_enabled: 'true'
+
+###################################################### Elastic ######################################################
+elastic_version: 7.13.3
+elastic_repo_version: '7.x'
+elastic_gpg_url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+elastic_repo_url: 'deb https://artifacts.elastic.co/packages/{{ elastic_repo_version }}/apt stable main'

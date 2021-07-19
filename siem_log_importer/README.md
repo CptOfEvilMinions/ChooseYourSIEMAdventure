@@ -69,8 +69,12 @@ python3 log_ingestor.py logstash \
 * []()
 
 ### Elastic
-* []()
-* []()
+* [How to use Python helpers to bulk load data into an Elasticsearch index](https://kb.objectrocket.com/elasticsearch/how-to-use-python-helpers-to-bulk-load-data-into-an-elasticsearch-index)
+* [Python Elasticsearch Client](https://elasticsearch-py.readthedocs.io/en/v7.13.3/)
+* [creating an elasticsearch index with Python](https://sarahleejane.github.io/learning/python/2015/10/14/creating-an-elastic-search-index-with-python.html)
+* [How to get a list of all indexes in python-elasticsearch](https://stackoverflow.com/questions/31928506/how-to-get-a-list-of-all-indexes-in-python-elasticsearch)
+* [How to use Bulk API to store the keywords in ES by using Python](https://stackoverflow.com/questions/20288770/how-to-use-bulk-api-to-store-the-keywords-in-es-by-using-python)
+* [Helpers](https://elasticsearch-py.readthedocs.io/en/master/helpers.html)
 * []()
 * []()
 * []()

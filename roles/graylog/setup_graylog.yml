@@ -50,7 +50,6 @@
     method: GET
     user: '{{ elastic_es_username }}'
     password: '{{ elastic_es_password }}'
-    body_format: json
     headers:
       Content-Type: application/json
     status_code: 200
@@ -96,7 +95,6 @@
     method: GET
     user: '{{ elastic_es_username }}'
     password: '{{ elastic_es_password }}'
-    body_format: json
     headers:
       Content-Type: application/json
     status_code: 200

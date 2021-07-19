@@ -1,0 +1,93 @@
+####################################################################
+# Install/Setup Logstash
+####################################################################
+- name: Add Elastic GPG key
+  apt_key:
+    url: "{{ elastic_gpg_url }}"
+    state: present
+
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ elastic_repo_url }}"
+    state: present
+
+- name: Install Logstash
+  apt:
+    name: 'logstash=1:{{ elastic_version }}-1'
+    state: present
+
+####################################################################
+# Copy TLS private key and cert
+####################################################################
+- name: Create Logstash TLS directory
+  file:
+    path: '/etc/logstash/tls'
+    state: directory
+    owner: logstash
+    group: logstash
+
+- name: Copy TLS cert
+  template:
+    src: "conf/tls/tls.crt"
+    dest: "/etc/logstash/tls/logstash.crt"
+    owner: logstash
+    group: logstash
+    mode: 0644
+
+- name: Copy TLS private key
+  template:
+    src: "conf/tls/tls.key"
+    dest: "/etc/logstash/tls/logstash.key"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+####################################################################
+# Copy Logstash pipeline
+####################################################################
+- name: Copy Logstash input config
+  template:
+    src: "conf/ansible/ingestor/logstash/02-input-beats.conf"
+    dest: "/etc/logstash/conf.d/02-input-beats.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+# - name: Copy Logstash filters
+#   template:
+#     src: "{{ item }}"
+#     dest: "/etc/logstash/conf.d/{{ item | basename }}"
+#     owner: logstash
+#     group: logstash
+#     mode: 0400
+#   with_fileglob:
+#     - conf/logstash_filters/*.conf
+
+- name: Copy Logstash output config
+  template:
+    src: "conf/ansible/ingestor/logstash/31-output-kafka.conf"
+    dest: "/etc/logstash/conf.d/30-output-elasticsearch.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
+
+####################################################################
+# Restart service
+####################################################################
+- name: Restart Logstash
+  service:
+    name: logstash
+    enabled: yes
+    state: restarted
+
+- name: Logstash healthcheck
+  uri:
+    url: "http://127.0.0.1:9600"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds

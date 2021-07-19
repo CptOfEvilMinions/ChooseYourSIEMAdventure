@@ -1,0 +1,23 @@
+####################################################################
+# Install/Setup UFW
+####################################################################
+- name: Setup Ubuntu UFW firewall
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow Logstash
+  ufw:
+    rule: allow
+    port: '5044'
+    proto: tcp
+
+- name: Allow Kafka
+  ufw:
+    rule: allow
+    port: '9092'
+    proto: tcp
+  
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
