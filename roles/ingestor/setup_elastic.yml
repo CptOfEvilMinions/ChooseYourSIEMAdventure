@@ -3,7 +3,7 @@
 ####################################################################
 - name: Copy Kafka input config
   template:
-    src: 'conf/elastic/03-input-kafka.conf'
+    src: 'conf/ansible/elastic/03-input-kafka.conf'
     dest: '/etc/logstash/conf.d/03-input-kafka.conf'
     owner: logstash
     group: logstash

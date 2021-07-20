@@ -81,7 +81,7 @@
 - name: Copy Logstash output config
   template:
     src: "conf/ansible/splunk/30-output-splunk-hec.conf"
-    dest: "/etc/logstash/conf.d/30-output-elasticsearch.conf"
+    dest: "/etc/logstash/conf.d/30-output-splunk-hec.conf"
     owner: logstash
     group: logstash
     mode: 0400

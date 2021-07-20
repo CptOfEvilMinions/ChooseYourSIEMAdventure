@@ -43,7 +43,7 @@
           "fetch_min_bytes": 5,
           "legacy_mode": false,
           "override_source": null,
-          "bootstrap_server": "172.16.50.10:9092"
+          "bootstrap_server": "{{ groups.ingestor[0] }}:9092"
         },
         "node": null
       }
