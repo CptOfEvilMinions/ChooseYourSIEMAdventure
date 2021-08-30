@@ -1,0 +1,25 @@
+Vagrant.configure("2") do |config|
+  # Ubunut image
+  config.vm.box = "roboxes/ubuntu2004"
+
+  # VM settings
+  config.vm.provider :vmware_desktop do |vmware|
+    vmware.utility_certificate_path = "/opt/vagrant-vmware-desktop/certificates"
+    vmware.cpus = "2"
+    vmware.memory = "4096"
+    vmware.gui = true
+    #vmware.name = "Ubuntu Server 20.04 64-bit - Elastic"
+  end
+
+  # Run ansible playbook
+  config.vm.provision "ansible" do |ansible|
+    
+    ansible.playbook = "deploy_elastic.yml"
+    ansible.inventory_path = ".vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
+    ansible.extra_vars = {
+        variable_host: "default"
+    }
+
+  end
+  
+end

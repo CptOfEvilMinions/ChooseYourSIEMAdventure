@@ -1,4 +1,4 @@
-- hosts: 'graylog'
+- hosts: "{{ variable_host | default('graylog', true) }}"
   become: yes
   become_user: root
   tasks:

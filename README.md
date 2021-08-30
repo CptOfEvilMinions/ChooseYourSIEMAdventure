@@ -25,6 +25,16 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * `Ubuntu 20.04 64-bit`
 
 ## References
+### Vagrant
+* [Vagrantfile - Ansible - extra_vars](https://www.vagrantup.com/docs/provisioning/ansible_common#extra_vars)
+* [Safely limiting Ansible playbooks to a single machine?](https://stackoverflow.com/questions/18195142/safely-limiting-ansible-playbooks-to-a-single-machine)
+* [roboxes/ubuntu2104](https://app.vagrantup.com/roboxes/boxes/ubuntu2104)
+* [Vagrant enhancement request: add -f option to specify Vagrantfile.* #10853](https://github.com/hashicorp/vagrant/issues/10853)
+* [Ansible Provisioner](https://www.vagrantup.com/docs/provisioning/ansible)
+* []()
+* []()
+* []()
+
 ### Docker
 * [RUN inside a conditional statement in Dockerfile](https://stackoverflow.com/questions/51518087/run-inside-a-conditional-statement-in-dockerfile)
 * []()

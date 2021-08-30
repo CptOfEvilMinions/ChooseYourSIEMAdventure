@@ -1,4 +1,4 @@
-- hosts: 'ingestor'
+- hosts: "{{ variable_host | default('ingestor', true) }}"
   become: yes
   become_user: root
   tasks:

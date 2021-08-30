@@ -5,3 +5,4 @@ pipeline_testers/venv
 conf/docker/splunk/default.yml
 __pycache__/
 siem_log_importer/venv
+.vagrant/
