@@ -18,9 +18,9 @@ Repo of configs for the three major SIEMs.
 The Ansible playbooks will automatically set the heap size to half of total system memory allocated to a host. For example, if a machine has `16GB` of memory, the ES heap size will be set to `8GB`.
 
 ## Supported versions
-* `Graylog v4.0.1`
-* `Elastic v7.10`
-* `Splunk v8.1.2`
+* `Graylog v4.2`
+* `Elastic v7.15.1`
+* `Splunk v8.2`
 * `Ansible v2.11+`
 * `Ubuntu 20.04 64-bit`
 

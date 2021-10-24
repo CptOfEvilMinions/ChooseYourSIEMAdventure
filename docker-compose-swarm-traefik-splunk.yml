@@ -1,52 +1,20 @@
 version: "3.9"
 services: 
-  ###################################################### NGINX ######################################################
-  nginx:
-    image: nginx:1.21.3-alpine
-    configs:
-      - source: nginx-conf
-        target: /etc/nginx/nginx.conf
-      - source: nginx-splunk-conf
-        target: /etc/nginx/conf.d/splunk.conf
-    secrets:
-      - source: nginx-tls-cert
-        target: /etc/ssl/certs/nginx.crt
-      - source: nginx-tls-key
-        target: /etc/ssl/private/nginx.key
-    networks: 
-      - default
-      - splunk-backend 
-    ports:
-      - 8000:80
-      - 8443:443
-      - 8089:8089
-      - 8088:8088
-    depends_on: 
-      - splunk
-    deploy:
-      resources:
-        limits:
-          #cpus: '1'
-          memory: 150M
-        reservations:
-          #cpus: '0.25'
-          memory: 100M
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 50
-        window: 120s
-
   ###################################################### Splunk ######################################################
   splunk:
     image: splunk/splunk:8.2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.splunk.rule=Host(`splunk.hackinglab.local`)"
+      - "traefik.http.routers.splunk.tls=true"
+      - "traefik.docker.network=traefik_traefik-net"
     secrets:
       - source: splunk-default-conf
         target: /tmp/defaults/default.yml
     environment:
       - SPLUNK_START_ARGS=--accept-license
     networks: 
-      - default
+      - traefik_traefik-net
       - splunk-backend
     volumes: 
       - splunk-var:/opt/splunk/var
@@ -117,6 +85,8 @@ services:
 
 networks: 
   splunk-backend:
+  traefik_traefik-net:
+    external: true
 
 volumes: 
   splunk-var:

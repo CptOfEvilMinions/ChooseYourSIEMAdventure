@@ -2,11 +2,11 @@ version: "3.9"
 services: 
   ###################################################### Kibana ######################################################
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.12.0
+    image: docker.elastic.co/kibana/kibana:7.15.1
     entrypoint: /docker-entrypoint-initdb.d/kibana-entrypoint.sh
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kibana.rule=Host(`siem.hackinglab.local`)"
+      - "traefik.http.routers.kibana.rule=Host(`elastic.hackinglab.local`)"
       - "traefik.http.routers.kibana.tls=true"
       - "traefik.docker.network=traefik_traefik-net"
     secrets:
@@ -41,7 +41,7 @@ services:
 
   ###################################################### Elasticsearch ######################################################
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
     #command: ["eswrapper", ";", "whoami", ";", "/usr/share/elasticsearch/elasticsearch-entrypoint.sh",  ";", "whoami"] 
     configs: 
       #### entrypoint ###
@@ -92,7 +92,7 @@ services:
 
   ###################################################### Logstash ######################################################
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.12.0
+    image: docker.elastic.co/logstash/logstash:7.15.1
     entrypoint: /usr/share/logstash/logstash-entrypoint.sh
     configs: 
       #### entrypoint ###
@@ -154,7 +154,7 @@ networks:
   elastic-backend:
   traefik_traefik-net:
     external: true
-    
+
 configs:
   nginx-conf:
     file: ./conf/docker/nginx/nginx.conf
