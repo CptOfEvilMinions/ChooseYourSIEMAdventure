@@ -2,7 +2,7 @@ version: "3.9"
 services: 
   ###################################################### Graylog ######################################################
   graylog:
-    image: graylog/graylog:4.0.6
+    image: graylog/graylog:4.2.0
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.graylog.rule=Host(`graylog.hackinglab.local`)"
@@ -31,7 +31,6 @@ services:
       #- GRAYLOG_ELASTICSEARCH_HOSTS=http://elastic:es-password@elasticsearch:9200
       #- GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:graylog-password@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
-      - GRAYLOG_HTTP_EXTERNAL_URI=https://graylog.hackinglab.local/
       - GRAYLOG_ROOT_PASSWORD_SHA2__FILE=/run/secrets/graylog-root-password-sha2
       - GRAYLOG_ELASTICSEARCH_HOSTS__FILE=/run/secrets/graylog-es-uri
       - GRAYLOG_MONGODB_URI__FILE=/run/secrets/graylog-mongo-uri
@@ -59,7 +58,6 @@ services:
         delay: 5s
         max_attempts: 50
         window: 120s 
-
 
   ###################################################### MongoDB ######################################################
   mongo:
@@ -91,7 +89,7 @@ services:
 
   ###################################################### Elasticsearch ######################################################
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
     secrets:
       - source: graylog-elasticsearch-password
         MODE: 0400
