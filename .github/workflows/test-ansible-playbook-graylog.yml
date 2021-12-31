@@ -46,7 +46,6 @@ jobs:
           # Optional, additional flags to pass to ansible-playbook
           options: |
             --connection=local
-            --inventory hosts.ini
             --limit graylog
             --verbose
 

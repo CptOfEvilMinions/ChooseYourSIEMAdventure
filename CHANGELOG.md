@@ -35,6 +35,7 @@
 
 - Added GHA workflow to test changes to `docker-compose-graylog.yml`
 - Added GHA workflow to test changes to `deploy_graylog.yml`
+- Added GHA workflow for tagged releases `.github/workflows/tagged-release.yml`
 
 ### Documentation
 
