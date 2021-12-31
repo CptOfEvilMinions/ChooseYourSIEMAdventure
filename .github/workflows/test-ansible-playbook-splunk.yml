@@ -68,7 +68,7 @@ jobs:
           python3 pipeline_testers/beats_input_test.py \
           --platform splunk \
           --host 127.0.0.1 \
-          --api_port 443 \
+          --api_port 8089 \
           --ingest_port 5044 \
           --siem_username admin \
           --siem_password $(cat group_vars/all.yml| grep siem_password | awk -F ':' '{print $2}' | tr -d ' ' | tr -d "'")
