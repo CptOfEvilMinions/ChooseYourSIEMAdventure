@@ -42,7 +42,7 @@ jobs:
           echo "[+] - Graylog has started"
 
       - name: Create Graylog Beats input
-        run: 'docker exec -it siem-graylog-graylog /usr/share/graylog/generate_beats_input.sh'
+        run: 'docker exec -i siem-graylog-graylog /usr/share/graylog/generate_beats_input.sh'
 
       - uses: actions/setup-python@v2
       - uses: syphar/restore-virtualenv@v1
