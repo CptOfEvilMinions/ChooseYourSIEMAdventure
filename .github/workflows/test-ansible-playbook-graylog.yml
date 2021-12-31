@@ -1,4 +1,4 @@
-name: Graylog docker-compose test
+name: Graylog Ansible playbook test
 
 on: 
   # Only run when Graylog docker-compose changes
