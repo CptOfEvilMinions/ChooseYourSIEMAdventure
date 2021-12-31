@@ -46,9 +46,10 @@ def send_log(siem):
     "pid": 65534,
     "program": "example.py",
     "service": {
-      "type": "python-logstash"
+      "type": "test"
     }
   }
+  print (message)
   
   # Create connector
   client = PyLogBeatClient(siem.host, siem.ingest_port, ssl_enable=True, ssl_verify=False)
@@ -151,12 +152,11 @@ def check_splunk(siem):
       verify = False
     )
 
+
     for result in r.json()['results']:
-      json_data = json.loads(result['_raw'])
-      if json_data['message'] == siem.random_message:
+      if result['_raw'] == siem.random_message:
         return True
     time.sleep(3)
-
   return False
 
 

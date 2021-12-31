@@ -1,13 +1,20 @@
 ###################################################### Splunk ######################################################
 hostname: 'splunk'
-splunk_version: '8.2.2.1'
+splunk_version: '8.2.4'
 
 # https://www.splunk.com/en_us/download/splunk-enterprise.html
-splunk_dl_url: 'https://download.splunk.com/products/splunk/releases/{{ splunk_version }}/linux/splunk-{{ splunk_version }}-ae6821b7c64b-linux-2.6-amd64.deb'
+splunk_dl_url: 'https://download.splunk.com/products/splunk/releases/{{ splunk_version }}/linux/splunk-{{ splunk_version }}-87e2dda940d1-linux-2.6-amd64.deb'
+
+data_sources: [
+  { "name": "test", "index": "main", "sourcetype": "httpevent", "message_field": "%{[message]}"},
+  { "name": "zeek", "index": "zeek", "sourcetype": "bro:json"},
+  { "name": "osquery", "index": "osquery", "sourcetype": "osquery:result"},
+  { "name": "sysmon", "index": "sysmon", "sourcetype": "XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"},
+]
 
 ###################################################### Logstash ######################################################
 beats_port: 5044
-elastic_version: 7.15.1
+elastic_version: 7.16.2
 elastic_repo_version: '7.x'
 elastic_gpg_url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
 elastic_repo_url: 'deb https://artifacts.elastic.co/packages/{{ elastic_repo_version }}/apt stable main'

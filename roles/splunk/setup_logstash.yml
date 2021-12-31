@@ -52,22 +52,6 @@
     - 'conf/tls/*.crt'
 
 ####################################################################
-# Create logstash_writer user and role
-####################################################################
-- name: Read contents of Splunk Zeek HEC token file
-  shell: "cat /tmp/splunk-zeek-hec-token.txt"
-  register: file_token
-  when: SPLUNK_ZEEK_HEC_TOKEN is undefined
-
-- name: Set elastic user credentials
-  set_fact:
-    SPLUNK_ZEEK_HEC_TOKEN: "{{ file_token.stdout }}"
-  when: SPLUNK_ZEEK_HEC_TOKEN is undefined
-
-- debug:
-    msg: '{{ SPLUNK_ZEEK_HEC_TOKEN }}'
-
-####################################################################
 # Copy Logstash pipeline
 ####################################################################
 - name: Copy Logstash input config
@@ -84,11 +68,17 @@
     dest: "/etc/logstash/conf.d/30-output-splunk-hec.conf"
     owner: logstash
     group: logstash
-    mode: 0400
+    mode: 0600
 
 ####################################################################
 # Restart service
 ####################################################################
+- name: Check Logstash config
+  shell: '/usr/share/logstash/bin/logstash --config.test_and_exit -f {{ item }}'
+  with_items:
+    - '/etc/logstash/conf.d/30-output-splunk-hec.conf'
+    - '/etc/logstash/conf.d/02-input-beats.conf'
+
 - name: Restart Logstash
   service:
     name: logstash
