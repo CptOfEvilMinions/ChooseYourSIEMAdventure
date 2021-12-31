@@ -29,6 +29,10 @@
 - Upgrading Graylog to a version that is [not vulnerable to log4j](https://www.graylog.org/post/graylog-update-for-log4j)
 - Upgrading Mongo to a version that is [not vulnerable to log4j](https://www.mongodb.com/blog/post/log4shell-vulnerability-cve-2021-44228-and-mongodb)
 
+### CI/CD
+
+- Added GHA workflow to test changes to `docker-compose-graylog.yml`
+
 ### Documentation
 
 - Updated Graylog supported version to v4.2.4 on [README](README.md)

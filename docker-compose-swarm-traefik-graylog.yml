@@ -32,6 +32,7 @@ services:
       #- GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:graylog-password@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
       - GRAYLOG_ROOT_PASSWORD_SHA2__FILE=/run/secrets/graylog-root-password-sha2
+      - GRAYLOG_PASSWORD_SECRET__FILE=/run/secrets/graylog-password-secret
       - GRAYLOG_ELASTICSEARCH_HOSTS__FILE=/run/secrets/graylog-es-uri
       - GRAYLOG_MONGODB_URI__FILE=/run/secrets/graylog-mongo-uri
     ports:
@@ -150,6 +151,8 @@ secrets:
   nginx-tls-key:
     file: ./conf/tls/tls.key
   graylog-root-password-sha2:
+    external: true
+  graylog-password-secret:
     external: true
   graylog-mongo-uri:
     external: true
