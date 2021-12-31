@@ -20,7 +20,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 ## Supported versions
 * `Graylog v4.2.4`
 * `Elastic v7.15.1`
-* `Splunk v8.2`
+* `Splunk v8.2.4`
 * `Ansible v2.12.1+`
     * `ansible-galaxy: community.mongodb >= 1.3.2`
 * `Ubuntu 20.04 64-bit`

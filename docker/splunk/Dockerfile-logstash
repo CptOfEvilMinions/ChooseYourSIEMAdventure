@@ -20,4 +20,4 @@ USER logstash
 RUN rm /usr/share/logstash/pipeline/logstash.conf
 COPY conf/docker/splunk/02-input-beats.conf /usr/share/logstash/pipeline/02-input-beats.conf
 COPY conf/docker/splunk/30-output-splunk-hec.conf /usr/share/logstash/pipeline/30-output-splunk-hec.conf
-RUN sed -i "s/{{ SPLUNK_ZEEK_HEC_TOKEN }}/${HEC_TOKEN}/g" /usr/share/logstash/pipeline/30-output-splunk-hec.conf
+RUN sed -i "s/{{ splunk_hec_token }}/${HEC_TOKEN}/g" /usr/share/logstash/pipeline/30-output-splunk-hec.conf
