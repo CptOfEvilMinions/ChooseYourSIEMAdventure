@@ -1,8 +1,8 @@
 ###################################################### Graylog ######################################################
 hostname: 'graylog'
 
-graylog_version: '4.2'
-graylog_dl_url: 'https://packages.graylog2.org/repo/packages/graylog-{{ graylog_version }}-repository_latest.deb'
+graylog_version: '4.2.4'
+graylog_dl_url: 'https://packages.graylog2.org/repo/packages/graylog-{{ graylog_version[:-2] }}-repository_latest.deb'
 
 ### Beats input ###
 beats_title: Beats input
@@ -13,15 +13,15 @@ beats_tls_cert_file_path: "/etc/ssl/certs/{{ hostname }}.crt"
 beats_tls_key_file_path: "/etc/ssl/private/{{ hostname }}.key"
 
 ###################################################### Elasticsearch ######################################################
-elastic_version: 7.13.3
+elastic_version: 7.16.2
 elastic_repo_version: '7.x'
 elastic_gpg_url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
 elastic_repo_url: 'deb https://artifacts.elastic.co/packages/{{ elastic_repo_version }}/apt stable main'
 
 ###################################################### Mongo ######################################################
-mongo_version: '4.2'
-mongo_gpg_url: 'https://www.mongodb.org/static/pgp/server-4.2.asc'
-mongo_repo_url: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/{{ mongo_version }} multiverse'
+mongo_version: '4.2.17'
+mongo_gpg_url: 'https://www.mongodb.org/static/pgp/server-{{ mongo_version[:-3] }}.asc'
+mongo_repo_url: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/{{ mongo_version[:-3] }} multiverse'
 
 #### credentials ####
 mongo_admin_username: 'admin'
