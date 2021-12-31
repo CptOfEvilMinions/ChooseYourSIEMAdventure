@@ -4,8 +4,8 @@
   become_user: root
   tasks:
     - include_vars: 'group_vars/splunk.yml'
-    #- import_tasks: 'roles/init.yml'
-    #- import_tasks: 'roles/splunk/setup_splunk.yml'
-    #- import_tasks: 'roles/splunk/setup_nginx.yml'
+    - import_tasks: 'roles/init.yml'
+    - import_tasks: 'roles/splunk/setup_splunk.yml'
+    - import_tasks: 'roles/splunk/setup_nginx.yml'
     - import_tasks: 'roles/splunk/setup_logstash.yml'
-    #- import_tasks: 'roles/splunk/setup_ufw.yml'
+    - import_tasks: 'roles/splunk/setup_ufw.yml'

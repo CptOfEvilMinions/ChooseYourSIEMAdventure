@@ -1,66 +1,66 @@
-# ####################################################################
-# # Install/Setup Logstash
-# ####################################################################
-# - name: Add Elastic GPG key
-#   apt_key:
-#     url: "{{ elastic_gpg_url }}"
-#     state: present
+####################################################################
+# Install/Setup Logstash
+####################################################################
+- name: Add Elastic GPG key
+  apt_key:
+    url: "{{ elastic_gpg_url }}"
+    state: present
 
-# - name: Add Elastic repo
-#   apt_repository:
-#     repo: "{{ elastic_repo_url }}"
-#     state: present
+- name: Add Elastic repo
+  apt_repository:
+    repo: "{{ elastic_repo_url }}"
+    state: present
 
-# - name: Install Logstash
-#   apt:
-#     name: 'logstash=1:{{ elastic_version }}-1'
-#     state: present
+- name: Install Logstash
+  apt:
+    name: 'logstash=1:{{ elastic_version }}-1'
+    state: present
 
-# - name: Install Logstash plugins
-#   shell: '/usr/share/logstash/bin/logstash-plugin install {{ item }}'
-#   with_items:
-#     - 'logstash-filter-json_encode'
+- name: Install Logstash plugins
+  shell: '/usr/share/logstash/bin/logstash-plugin install {{ item }}'
+  with_items:
+    - 'logstash-filter-json_encode'
 
-# ####################################################################
-# # Copy TLS private key and cert
-# ####################################################################
-# - name: Create Logstash TLS directory
-#   file:
-#     path: '/etc/logstash/tls'
-#     state: directory
-#     owner: logstash
-#     group: logstash
+####################################################################
+# Copy TLS private key and cert
+####################################################################
+- name: Create Logstash TLS directory
+  file:
+    path: '/etc/logstash/tls'
+    state: directory
+    owner: logstash
+    group: logstash
 
-# - name: Copy Self-signed public cert for Logstash
-#   template:
-#     src: '{{ item }}'
-#     dest: '/etc/logstash/tls/logstash.key'
-#     owner: 'logstash'
-#     group: 'logstash'
-#     mode: 0400
-#   with_fileglob:
-#     - conf/tls/*.key
+- name: Copy Self-signed public cert for Logstash
+  template:
+    src: '{{ item }}'
+    dest: '/etc/logstash/tls/logstash.key'
+    owner: 'logstash'
+    group: 'logstash'
+    mode: 0400
+  with_fileglob:
+    - conf/tls/*.key
 
-# - name: Copy Self-signed private key for Logstash
-#   template:
-#     src: '{{ item }}'
-#     dest: '/etc/logstash/tls/logstash.crt'
-#     owner: 'logstash'
-#     group: 'logstash'
-#     mode: 0644
-#   with_fileglob:
-#     - 'conf/tls/*.crt'
+- name: Copy Self-signed private key for Logstash
+  template:
+    src: '{{ item }}'
+    dest: '/etc/logstash/tls/logstash.crt'
+    owner: 'logstash'
+    group: 'logstash'
+    mode: 0644
+  with_fileglob:
+    - 'conf/tls/*.crt'
 
 ####################################################################
 # Copy Logstash pipeline
 ####################################################################
-# - name: Copy Logstash input config
-#   template:
-#     src: "conf/ansible/splunk/02-inputs-beat.conf"
-#     dest: "/etc/logstash/conf.d/02-input-beats.conf"
-#     owner: logstash
-#     group: logstash
-#     mode: 0400
+- name: Copy Logstash input config
+  template:
+    src: "conf/ansible/splunk/02-inputs-beat.conf"
+    dest: "/etc/logstash/conf.d/02-input-beats.conf"
+    owner: logstash
+    group: logstash
+    mode: 0400
 
 - name: Copy Logstash output config
   template:
@@ -73,23 +73,26 @@
 ####################################################################
 # Restart service
 ####################################################################
-# - name: Check Logstash config
-#   shell: '/usr/share/logstash/bin/logstash --config.test_and_exit -f /etc/logstash/logstash.yml'
+- name: Check Logstash config
+  shell: '/usr/share/logstash/bin/logstash --config.test_and_exit -f {{ item }}'
+  with_items:
+    - '/etc/logstash/conf.d/30-output-splunk-hec.conf'
+    - '/etc/logstash/conf.d/02-input-beats.conf'
 
-# - name: Restart Logstash
-#   service:
-#     name: logstash
-#     enabled: yes
-#     state: restarted
+- name: Restart Logstash
+  service:
+    name: logstash
+    enabled: yes
+    state: restarted
 
-# - name: Logstash healthcheck
-#   uri:
-#     url: "http://127.0.0.1:9600"
-#     follow_redirects: none
-#     method: GET
-#     remote_src: yes
-#     status_code: 200
-#   register: _result
-#   until: _result.status == 200
-#   retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
-#   delay: 5 # Every 5 seconds
+- name: Logstash healthcheck
+  uri:
+    url: "http://127.0.0.1:9600"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
