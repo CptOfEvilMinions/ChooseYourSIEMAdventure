@@ -82,6 +82,9 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [ansible.builtin.password – retrieve or generate a random password, stored in a file](https://docs.ansible.com/ansible/devel/collections/ansible/builtin/password_lookup.html)
 * [Disable output when using cURL](https://makandracards.com/makandra/1615-disable-output-when-using-curl)
 * [ansible-galaxy: community.mongodb](https://galaxy.ansible.com/community/mongodb?extIdCarryOver=true&sc_cid=701f2000001OH7YAAW)
+* [[Solved] TypeError: ‘Collection’ object is not callable. If you meant to call the ‘authenticate’ method on a ‘Database’ object it is failing because no such method exists.](https://debugah.com/solved-typeerror-collection-object-is-not-callable-if-you-meant-to-call-the-authenticate-method-on-a-database-object-it-is-failing-because-no-such-method-exists-23011/)
+* []()
+* []()
 * []()
 * []()
 

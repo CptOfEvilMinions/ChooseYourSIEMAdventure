@@ -24,7 +24,8 @@ jobs:
         run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
       
       - name: Comment out roles/init.yml
-        run: 'sed -i  "s?- import_tasks: \'roles/init.yml\'?#- import_tasks: \'roles/init.yml\'?g" deploy_graylog.yml'
+        run: |
+          sed -i  "s?- import_tasks: \'roles/init.yml\'?#- import_tasks: \'roles/init.yml\'?g" deploy_graylog.yml
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
@@ -66,6 +67,6 @@ jobs:
           --host 127.0.0.1 \
           --api_port 443 \
           --ingest_port 5044 \
-          --siem_username admin 
+          --siem_username admin \
           --siem_password $(cat group_vars/all.yml| grep siem_password | awk -F ':' '{print $2}' | tr -d ' ' | tr -d "'")
 
