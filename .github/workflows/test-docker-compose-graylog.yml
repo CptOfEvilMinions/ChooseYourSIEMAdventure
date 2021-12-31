@@ -65,7 +65,6 @@ jobs:
           --host 127.0.0.1 \
           --api_port 8443 \
           --ingest_port 5044 \
-          --siem_username admin 
-          --siem_password Changeme123!
-        
+          --siem_username admin \
+          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
 
