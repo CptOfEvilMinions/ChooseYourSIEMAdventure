@@ -19,6 +19,7 @@ services:
       - graylog-root-password-sha2
       - graylog-mongo-uri
       - graylog-es-uri
+      - graylog-password-secret
     configs:
       - source: generate-beats-input-script
         target: /usr/share/graylog/generate_beats_input.sh

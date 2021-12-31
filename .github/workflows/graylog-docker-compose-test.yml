@@ -25,6 +25,9 @@ jobs:
       - name: Build Docker images
         run: 'docker-compose -f docker-compose-graylog.yml build'
 
+      - name: Lower CPU count on containers
+        run: "sed -i '' 's/cpus:.*/cpus: 1/g' docker-compose-graylog.yml"
+
       - name: Run docker-compose
         run: 'docker-compose -f docker-compose-graylog.yml up -d'
 
