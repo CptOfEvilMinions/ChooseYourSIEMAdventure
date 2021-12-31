@@ -25,7 +25,7 @@ jobs:
       
       - name: Comment out roles/init.yml
         run: |
-          sed -i  "s?- import_tasks: \'roles/init.yml\'?#- import_tasks: \'roles/init.yml\'?g" deploy_graylog.yml
+          sed -i  "s?- import_tasks: 'roles/init.yml'?#- import_tasks: 'roles/init.yml'?g" deploy_graylog.yml
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
