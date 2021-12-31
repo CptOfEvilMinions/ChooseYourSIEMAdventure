@@ -100,7 +100,7 @@ services:
     ports:
       - 5044:5044
     depends_on: 
-      - splunk-heavy-forwarder
+      - splunk
     deploy:
       resources:
         limits:

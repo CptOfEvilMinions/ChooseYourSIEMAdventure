@@ -153,7 +153,6 @@ def check_splunk(siem):
 
 
     for result in r.json()['results']:
-      print (result)
       if result['_raw'] == siem.random_message:
         return True
     time.sleep(3)
