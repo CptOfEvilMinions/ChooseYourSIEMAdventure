@@ -1,12 +1,12 @@
-name: Splunk docker-compose test
+name: Splunk Ansible playbook test
 
 on: 
   # Only run when Splunk docker-compose changes
   push:
     paths:
-      - 'conf/docker/splunk/*'
-      - '.env'
-      - 'docker-compose-splunk.yml'
+      - 'group_vars/splunk.yml'
+      - 'roles/splunk/*'
+      - 'deploy_splunk.yml'
 
   # Only run when PR is requesting to merge with main
   pull_request:
@@ -23,14 +23,31 @@ jobs:
       - name: Generate TLS certs
         run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
       
-      - name: Build Docker images
-        run: 'docker-compose -f docker-compose-splunk.yml build'
+      - name: Comment out roles/init.yml
+        run: |
+          sed -i  "s?- import_tasks: 'roles/init.yml'?#- import_tasks: 'roles/init.yml'?g" deploy_splunk.yml
 
-      - name: Lower CPU count on containers
-        run: "sed -i 's/cpus:.*/cpus: 1/g' docker-compose-splunk.yml"
+      - name: Install ansible-galaxy - community.mongodb
+        run: ansible-galaxy collection install 'community.mongodb:>=1.3.2'
 
-      - name: Run docker-compose
-        run: 'docker-compose -f docker-compose-splunk.yml up -d'
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          # Required, playbook filepath
+          playbook: deploy_splunk.yml
+          # Optional, directory where playbooks live
+          directory: ./
+          # Optional, literal inventory file contents
+          inventory: |
+            [splunk]
+            127.0.01
+          # Optional, SSH known hosts file content
+          known_hosts: .known_hosts
+          # Optional, additional flags to pass to ansible-playbook
+          options: |
+            --connection=local
+            --limit splunk
+            --verbose
 
       - uses: actions/setup-python@v2
       - uses: syphar/restore-virtualenv@v1
@@ -51,7 +68,8 @@ jobs:
           python3 pipeline_testers/beats_input_test.py \
           --platform splunk \
           --host 127.0.0.1 \
-          --api_port 8089 \
+          --api_port 443 \
           --ingest_port 5044 \
           --siem_username admin \
-          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
+          --siem_password $(cat group_vars/all.yml| grep siem_password | awk -F ':' '{print $2}' | tr -d ' ' | tr -d "'")
+
