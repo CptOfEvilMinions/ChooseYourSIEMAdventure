@@ -1,0 +1,70 @@
+name: Graylog docker-compose test
+
+on: 
+  # Only run when Graylog docker-compose changes
+  push:
+    paths:
+      - 'conf/docker/graylog/*'
+      - '.env'
+      - 'docker-compose-graylog.yml'
+
+  # Only run when PR is requesting to merge with main
+  pull_request:
+    branches:
+      - main
+
+jobs:  
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Generate TLS certs
+        run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
+      
+      - name: Build Docker images
+        run: 'docker-compose -f docker-compose-graylog.yml build'
+
+      - name: Lower CPU count on containers
+        run: "sed -i 's/cpus:.*/cpus: 1/g' docker-compose-graylog.yml"
+
+      - name: Run docker-compose
+        run: 'docker-compose -f docker-compose-graylog.yml up -d'
+
+      - name: Wait until graylog starts sucessfully
+        run: |
+          until docker logs siem-graylog-graylog | grep "Started REST API at <0.0.0.0:9000>"
+          do
+            echo "[*] - Waiting on Graylog to start"
+            sleep 3
+          done
+          echo "[+] - Graylog has started"
+
+      - name: Create Graylog Beats input
+        run: 'docker exec -i siem-graylog-graylog /usr/share/graylog/generate_beats_input.sh'
+
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
+        with:
+          requirement_files: pipeline_testers/requirements.txt
+
+      - uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      # the package installation will only be executed when the
+      # requirements-files have changed.
+      - run: pip3 install -r pipeline_testers/requirements.txt
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Test
+        run: |
+          python3 pipeline_testers/beats_input_test.py \
+          --platform graylog \
+          --host 127.0.0.1 \
+          --api_port 8443 \
+          --ingest_port 5044 \
+          --siem_username admin \
+          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
+

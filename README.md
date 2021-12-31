@@ -18,13 +18,30 @@ Repo of configs for the three major SIEMs.
 The Ansible playbooks will automatically set the heap size to half of total system memory allocated to a host. For example, if a machine has `16GB` of memory, the ES heap size will be set to `8GB`.
 
 ## Supported versions
-* `Graylog v4.2`
+* `Graylog v4.2.4`
 * `Elastic v7.15.1`
 * `Splunk v8.2`
-* `Ansible v2.11+`
+* `Ansible v2.12.1+`
+    * `ansible-galaxy: community.mongodb >= 1.3.2`
 * `Ubuntu 20.04 64-bit`
+* `Vagrant v2.2.19`
 
 ## References
+### Github actions
+* [Run Ansible playbook GitHub Action](https://github.com/marketplace/actions/run-ansible-playbook)
+* [Error "The input device is not a TTY"](https://stackoverflow.com/questions/43099116/error-the-input-device-is-not-a-tty)
+* [How to wait till a particular line appears in a file](https://stackoverflow.com/questions/25959870/how-to-wait-till-a-particular-line-appears-in-a-file)
+* [restore or create a python virtualenv](https://github.com/marketplace/actions/restore-or-create-a-python-virtualenv)
+* [docker-compose-actions-workflow](https://github.com/peter-evans/docker-compose-actions-workflow)
+* []()
+* []()
+* []()
+* []()
+* []()
+* []()
+* []()
+* []()
+
 ### Vagrant
 * [Vagrantfile - Ansible - extra_vars](https://www.vagrantup.com/docs/provisioning/ansible_common#extra_vars)
 * [Safely limiting Ansible playbooks to a single machine?](https://stackoverflow.com/questions/18195142/safely-limiting-ansible-playbooks-to-a-single-machine)
@@ -37,7 +54,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 
 ### Docker
 * [RUN inside a conditional statement in Dockerfile](https://stackoverflow.com/questions/51518087/run-inside-a-conditional-statement-in-dockerfile)
-* []()
+* [Error "The input device is not a TTY"](https://stackoverflow.com/questions/43099116/error-the-input-device-is-not-a-tty)
 * []()
 * []()
 * []()
@@ -65,6 +82,11 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Setting hostname with Ansible](https://www.derpturkey.com/setting-host-with-ansible-in-ubuntu/)
 * [ansible.builtin.password – retrieve or generate a random password, stored in a file](https://docs.ansible.com/ansible/devel/collections/ansible/builtin/password_lookup.html)
 * [Disable output when using cURL](https://makandracards.com/makandra/1615-disable-output-when-using-curl)
+* [ansible-galaxy: community.mongodb](https://galaxy.ansible.com/community/mongodb?extIdCarryOver=true&sc_cid=701f2000001OH7YAAW)
+* [[Solved] TypeError: ‘Collection’ object is not callable. If you meant to call the ‘authenticate’ method on a ‘Database’ object it is failing because no such method exists.](https://debugah.com/solved-typeerror-collection-object-is-not-callable-if-you-meant-to-call-the-authenticate-method-on-a-database-object-it-is-failing-because-no-such-method-exists-23011/)
+* [--conection=local](https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html#local-playbooks)
+* [How to Run Ansible Playbook Locally](https://www.middlewareinventory.com/blog/run-ansible-playbook-locally/)
+* []()
 * []()
 * []()
 * []()
@@ -142,6 +164,10 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Logstash - Add user information in Logstash](https://www.elastic.co/guide/en/elasticsearch/reference/current/get-started-logstash-user.html)
 * [How to Check if a File or Directory Exists in Bash](https://linuxize.com/post/bash-check-if-file-exists/)
 * [Dockerhub - kibana:7.12.0 - Docekrfile](https://hub.docker.com/layers/kibana/library/kibana/7.12.0/images/sha256-daaaf1f52a9d9350d53b584998f07a2d9ddde0eca24588b068311c2347811967?context=explore)
+* [Introducing 7.16.2 and 6.8.22 releases of Elasticsearch and Logstash to upgrade Apache Log4j2](https://www.elastic.co/blog/new-elasticsearch-and-logstash-releases-upgrade-apache-log4j2)
+* [RCE 0-day exploit found in log4j, a popular Java logging package #81618](https://github.com/elastic/elasticsearch/issues/81618#issuecomment-991000240)
+* [Upgrade log4j in Docker images #81863](https://github.com/elastic/elasticsearch/issues/81863)
+* []()
 * []()
 * []()
 * []()
@@ -198,9 +224,14 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Elasticsearch - [security_exception] action [indices:data/read/search] is unauthorized for user [user]](https://discuss.elastic.co/t/security-exception-action-indices-data-read-search-is-unauthorized-for-user-user/164848/3)
 * [Mongo - db.createUser()](https://docs.mongodb.com/manual/reference/method/db.createUser/)
 * [Mongo - security.authorization](https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization)
+* [DockerHub - Mongo v4.2.17 - not log4j vulnerable](https://hub.docker.com/layers/mongo/library/mongo/4.2.17/images/sha256-91e973ed3d1ac4330a1ee8bc924ddf300d5a80ce4942b56727d4850148c207dd?context=explore)
+* [Log4Shell Vulnerability (CVE-2021-44228, CVE-2021-45046 and CVE-2021-45105) and MongoDB](https://www.mongodb.com/blog/post/log4shell-vulnerability-cve-2021-44228-and-mongodb)
+* [GRAYLOG UPDATE FOR LOG4J](https://www.graylog.org/post/graylog-update-for-log4j)
+* [pymongo - release history](https://pypi.org/project/pymongo/#history)
 * []()
 * []()
 * []()
+
 
 ### Splunk
 * [Dockerhub - splunk/splunk](https://hub.docker.com/r/splunk/splunk/tags)

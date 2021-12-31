@@ -2,7 +2,7 @@ version: "3.9"
 services: 
   ###################################################### NGINX ######################################################
   nginx:
-    image: nginx:1.21.3-alpine
+    image: nginx:1.21.5-alpine
     configs:
       - source: nginx-conf
         target: /etc/nginx/nginx.conf
@@ -37,7 +37,7 @@ services:
 
   ###################################################### Graylog ######################################################
   graylog:
-    image: graylog/graylog:4.2.0
+    image: graylog/graylog:4.2.4
     secrets:
       - source: nginx-tls-cert
         target: /usr/share/graylog/tls/graylog.crt
@@ -46,6 +46,7 @@ services:
       - graylog-root-password-sha2
       - graylog-mongo-uri
       - graylog-es-uri
+      - graylog-password-secret
     configs:
       - source: generate-beats-input-script
         target: /usr/share/graylog/generate_beats_input.sh
@@ -59,6 +60,7 @@ services:
       #- GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:graylog-password@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
       - GRAYLOG_ROOT_PASSWORD_SHA2__FILE=/run/secrets/graylog-root-password-sha2
+      - GRAYLOG_PASSWORD_SECRET__FILE=/run/secrets/graylog-password-secret
       - GRAYLOG_ELASTICSEARCH_HOSTS__FILE=/run/secrets/graylog-es-uri
       - GRAYLOG_MONGODB_URI__FILE=/run/secrets/graylog-mongo-uri
     ports:
@@ -88,7 +90,7 @@ services:
 
   ###################################################### MongoDB ######################################################
   mongo:
-    image: mongo:4.2
+    image: mongo:4.2.17
     secrets:
       - graylog-mongo-username
       - graylog-mongo-password
@@ -127,7 +129,7 @@ services:
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD_FILE=/run/secrets/graylog-elasticsearch-password
       - xpack.security.enabled=true
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true" # Mitigate log4j vuln
     networks: 
       - default
       - graylog-backend 
@@ -175,6 +177,8 @@ secrets:
   nginx-tls-key:
     file: ./conf/tls/tls.key
   graylog-root-password-sha2:
+    external: true
+  graylog-password-secret:
     external: true
   graylog-mongo-uri:
     external: true

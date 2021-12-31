@@ -44,7 +44,7 @@
 
 - name: Install PyMongo
   pip:
-    name: pymongo
+    name: 'pymongo<4.0'
 
 - name: Create mongo admin user
   mongodb_user:
@@ -56,6 +56,7 @@
 
 - name: Create Mongo user and database for Graylog
   community.mongodb.mongodb_user:
+    auth_mechanism: 'SCRAM-SHA-1'
     login_user: '{{ mongo_admin_username }}'
     login_password: '{{ mongo_admin_password }}'
     database: '{{ mongo_graylog_db_name }}'

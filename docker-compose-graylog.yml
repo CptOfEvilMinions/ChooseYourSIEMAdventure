@@ -34,6 +34,7 @@ services:
       # Password is Changeme123!
       # To change password run: `echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | openssl sha256 | cut -d" " -f1`
       - GRAYLOG_ROOT_PASSWORD_SHA2=029b4fd16334ffa44e18d81e00de1e95e2467e66d00b4e043674861f6908234f
+      - GRAYLOG_PASSWORD_SECRET=ChangeMeChangeMeChangeMe
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
       - GRAYLOG_ELASTICSEARCH_HOSTS=http://${SIEM_USERNAME}:${SIEM_PASSWORD}@elasticsearch:9200
       - GRAYLOG_MONGODB_URI=mongodb://${SIEM_USERNAME}:${SIEM_PASSWORD}@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1
@@ -53,7 +54,7 @@ services:
 
   ###################################################### MongoDB ######################################################
   mongo:
-    image: mongo:4.2
+    image: mongo:4.2.17
     container_name: 'siem-graylog-mongo'
     restart: unless-stopped
     environment:
@@ -76,7 +77,7 @@ services:
       - cluster.name=docker-cluster
       - ELASTIC_USERNAME=${SIEM_USERNAME}
       - ELASTIC_PASSWORD=${SIEM_PASSWORD}
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true" # Mitigate log4j vuln
     networks: 
       - default
       - graylog-backend 
