@@ -18,7 +18,7 @@ Repo of configs for the three major SIEMs.
 The Ansible playbooks will automatically set the heap size to half of total system memory allocated to a host. For example, if a machine has `16GB` of memory, the ES heap size will be set to `8GB`.
 
 ## Supported versions
-* `Graylog v4.2`
+* `Graylog v4.2.4`
 * `Elastic v7.15.1`
 * `Splunk v8.2`
 * `Ansible v2.11+`
@@ -198,9 +198,14 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Elasticsearch - [security_exception] action [indices:data/read/search] is unauthorized for user [user]](https://discuss.elastic.co/t/security-exception-action-indices-data-read-search-is-unauthorized-for-user-user/164848/3)
 * [Mongo - db.createUser()](https://docs.mongodb.com/manual/reference/method/db.createUser/)
 * [Mongo - security.authorization](https://docs.mongodb.com/manual/reference/configuration-options/#security.authorization)
+* [DockerHub - Mongo v4.2.17 - not log4j vulnerable](https://hub.docker.com/layers/mongo/library/mongo/4.2.17/images/sha256-91e973ed3d1ac4330a1ee8bc924ddf300d5a80ce4942b56727d4850148c207dd?context=explore)
+* [Log4Shell Vulnerability (CVE-2021-44228, CVE-2021-45046 and CVE-2021-45105) and MongoDB](https://www.mongodb.com/blog/post/log4shell-vulnerability-cve-2021-44228-and-mongodb)
+* [GRAYLOG UPDATE FOR LOG4J](https://www.graylog.org/post/graylog-update-for-log4j)
 * []()
 * []()
 * []()
+* []()
+
 
 ### Splunk
 * [Dockerhub - splunk/splunk](https://hub.docker.com/r/splunk/splunk/tags)
