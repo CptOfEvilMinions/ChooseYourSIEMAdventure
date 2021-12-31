@@ -18,6 +18,8 @@
 - Updated [group_vars/splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/group_vars/splunk.yml#L3) to use Splunk v8.2.4
 - Updated [group_vars/splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/group_vars/splunk.yml#L10) to use `Logstash:7.16.2`
 - Updated [Splunk log test](pipeline_testers/beats_input_test.py)
+- Updated [roles/splunk/setup_splunk.yml](roles/splunk/setup_splunk.yml) setup multiple datasources
+- Updated [roles/splunk/setup_logstash.yml](roles/splunk/setup_logstash.yml) setup multiple datasources
 
 ### Bug Fixes
 
