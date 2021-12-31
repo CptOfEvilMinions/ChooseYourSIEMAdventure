@@ -16,6 +16,7 @@ on:
 jobs:  
   test:
     runs-on: ubuntu-20.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       
@@ -30,6 +31,15 @@ jobs:
 
       - name: Run docker-compose
         run: 'docker-compose -f docker-compose-graylog.yml up -d'
+
+      - name: Wait until graylog starts sucessfully
+        run: |
+          until docker logs siem-graylog-graylog | grep "Started REST API at <0.0.0.0:9000>"
+          do
+            echo "[*] - Waiting on Graylog to start"
+            sleep 3
+          done
+          echo "[+] - Graylog has started"
 
       - name: Create Graylog Beats input
         run: 'docker exec -it siem-graylog-graylog /usr/share/graylog/generate_beats_input.sh'

@@ -10,7 +10,7 @@
 - Adding `CHANGELOG.md`
 
 ### Under the Hood improvements
-
+- Added `-Dlog4j2.formatMsgNoLookups=true"` `docker-compose-graylog.yml`, `docker-compose-swarm-graylog.yml`,and `docker-compose-swarm-traefik-elastic.yml`to Elasticsearch JAVA environment variable to [mitigate log4j vulnerability.](https://github.com/elastic/elasticsearch/issues/81618#issuecomment-991000240)
 - Added [GRAYLOG_PASSWORD_SECRET to docker-compose](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-graylog.yml#L37)
 - Updated [Docker-compose](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/.env#L7) to use `nginx:1.21.5-alpine`
 - Updated [Docker-compose](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-graylog.yml#L56) to use `mongo:4.2.17`

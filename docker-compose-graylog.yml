@@ -77,7 +77,7 @@ services:
       - cluster.name=docker-cluster
       - ELASTIC_USERNAME=${SIEM_USERNAME}
       - ELASTIC_PASSWORD=${SIEM_PASSWORD}
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true" # Mitigate log4j vuln
     networks: 
       - default
       - graylog-backend 

@@ -61,7 +61,7 @@ services:
       - discovery.type=single-node
       - cluster.name=docker-cluster
       - xpack.security.enabled=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true" # Mitigate log4j vuln
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD_FILE=/run/secrets/elastic-builtin-elastic
     ulimits:

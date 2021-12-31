@@ -129,7 +129,7 @@ services:
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD_FILE=/run/secrets/graylog-elasticsearch-password
       - xpack.security.enabled=true
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true" # Mitigate log4j vuln
     networks: 
       - default
       - graylog-backend 
