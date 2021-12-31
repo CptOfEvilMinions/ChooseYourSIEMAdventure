@@ -24,6 +24,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * `Ansible v2.12.1+`
     * `ansible-galaxy: community.mongodb >= 1.3.2`
 * `Ubuntu 20.04 64-bit`
+* `Vagrant v2.2.19`
 
 ## References
 ### Github actions
