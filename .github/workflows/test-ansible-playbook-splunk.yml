@@ -60,6 +60,15 @@ jobs:
       - run: pip3 install -r pipeline_testers/requirements.txt
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
+      - name: Wait until Splunk starts sucessfully
+        run: |
+          until curl -k -s https://127.0.0.1:8089/servicesNS/admin/search/auth/login -d 'username=admin' -d "password=$(cat group_vars/all.yml| grep siem_password | awk -F ':' '{print $2}' | tr -d ' ' | tr -d \"'\")" -d 'output_mode=json' | grep "sessionKey"
+          do
+            echo "[*] - Waiting on Splunk to start"
+            sleep 3
+          done
+          echo "[+] - Splunk has started"
+
       - name: Test
         run: |
           python3 pipeline_testers/beats_input_test.py \
