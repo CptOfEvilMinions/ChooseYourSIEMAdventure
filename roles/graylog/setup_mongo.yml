@@ -44,7 +44,7 @@
 
 - name: Install PyMongo
   pip:
-    name: pymongo
+    name: pymongo==3.9
 
 - name: Create mongo admin user
   mongodb_user:
