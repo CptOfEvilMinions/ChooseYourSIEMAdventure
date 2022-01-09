@@ -48,14 +48,14 @@ jobs:
 
       - name: Wait until Elastic starts sucessfully
         run: |
-          until curl -u "elastic:$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
+          until curl -s -u "elastic:$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
           do
             echo "[*] - Waiting on Elastic to start"
             sleep 3
           done
           echo "[+] - Elastic has started"
 
-          until curl -s -f -o /dev/null "http://127.0.0.1:9600"
+          until netstat -tl | grep 5044 | grep LISTEN
           do
             echo "[*] - Waiting on Logstash to start"
             sleep 3
