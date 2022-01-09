@@ -58,7 +58,12 @@ def send_log(siem: SIEM) -> Tuple[bool, Exception]:
   try:
     # Connect to server, send log message, and close connection
     client.connect()
-    client.send([message])
+    for _ in range(0, siem.retries):
+      result = client.send([message])
+      print (result)
+      if result != None:
+        break
+      time.sleep(3)
     client.close()
     print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}") 
     return True, None

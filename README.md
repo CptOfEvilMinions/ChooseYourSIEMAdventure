@@ -108,6 +108,11 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [How to get current date and time in Python?](https://www.programiz.com/python-programming/datetime/current-datetime)
 * [StackOverFlow - Random string generation with upper case letters and digits](https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits)
 * [Suppress InsecureRequestWarning: Unverified HTTPS request is being made in Python2.6](https://stackoverflow.com/questions/27981545/suppress-insecurerequestwarning-unverified-https-request-is-being-made-in-pytho)
+* [Safe method to get value of nested dictionary](https://stackoverflow.com/questions/25833613/safe-method-to-get-value-of-nested-dictionary)
+* [Bash while loop stop after a successful curl request [duplicate]](https://unix.stackexchange.com/questions/644343/bash-while-loop-stop-after-a-successful-curl-request)
+* [cat indices API](https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-indices.html)
+* []()
+* []()
 * []()
 * []()
 
