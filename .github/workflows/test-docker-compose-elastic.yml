@@ -46,14 +46,21 @@ jobs:
       - run: pip3 install -r pipeline_testers/requirements.txt
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
-      - name: Wait until Splunk starts sucessfully
+      - name: Wait until Elastic starts sucessfully
         run: |
-          until curl -k -s https://127.0.0.1:8089/servicesNS/admin/search/auth/login -d 'username=admin' -d "password=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -d 'output_mode=json' | grep "sessionKey"
+          until curl -u "elastic:$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
           do
-            echo "[*] - Waiting on Splunk to start"
+            echo "[*] - Waiting on Elastic to start"
             sleep 3
           done
-          echo "[+] - Splunk has started"
+          echo "[+] - Elastic has started"
+
+          until curl -s -f -o /dev/null "http://127.0.0.1:9600"
+          do
+            echo "[*] - Waiting on Logstash to start"
+            sleep 3
+          done
+          echo "[+] - Logstash has started"
 
       - name: Test
         run: |
