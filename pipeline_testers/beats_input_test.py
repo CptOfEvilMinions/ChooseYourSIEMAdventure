@@ -83,7 +83,7 @@ def check_graylog(siem: SIEM) -> bool:
   # Generate URL
   url = f"https://{siem.host}:{siem.port}/api/search/universal/relative?query={siem.random_message}&range=3600&limit=100&sort=timestamp:desc&pretty=true"
 
-  for i in range(0, siem.retries):
+  for _ in range(0, siem.retries):
     result = requests.get(url=url, headers=headers, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
     if len(result['messages']) > 0:
       return True
@@ -185,6 +185,7 @@ if __name__ == "__main__":
   result, err = send_log(siem)
   if err != None:
     print (f"[-] - {datetime.now()} - Failed to send random message to {siem.platform} - {siem.host}:{siem.ingest_port}") 
+    sys.exit(1)
 
   # Query for random message
   if siem.platform == 'elastic' and check_elasticsearch(siem):
@@ -195,3 +196,4 @@ if __name__ == "__main__":
     print (f"[+] - {datetime.now()} - Random message: {siem.random_message} ingested in {siem.platform}")
   else:
     print ("Failed")
+    sys.exit(1)
