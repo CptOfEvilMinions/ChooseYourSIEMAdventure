@@ -1,5 +1,39 @@
 # ChooseYourSIEMAdventure Changelog
 
+<a name="elastic-v7.16.2"></a>
+## [elastic-v7.16.2](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/releases/tag/elastic-v7.16.2)
+
+[Git Commits](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/compare/splunk-v8.2.4...elastic-v7.16.2)
+
+
+### Under the Hood improvements
+- Updated [.env](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/.env#L1) to use Elastic products version v7.16.2
+
+
+- Updated [docker-compose-swarm-splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-swarm-splunk.yml#L5) to use `nginx:1.21.5-alpine`
+- Updated [docker-compose-swarm-splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-swarm-splunk.yml#L42) to use `splunk:8.2.4`
+- Updated [docker-compose-swarm-splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-swarm-splunk.yml#L42) to use `logstash:7.16.2`
+- Updated [docker-compose-swarm-traefik-splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-swarm-traefik-splunk.yml#L5) to use `splunk:8.2.4`
+- Updated [docker-compose-swarm-traefik-splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/docker-compose-swarm-traefik-splunk.yml#L38) to use `logstash:7.16.2`
+- Updated [group_vars/splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/group_vars/splunk.yml#L3) to use Splunk v8.2.4
+- Updated [group_vars/splunk.yml](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/blob/main/group_vars/splunk.yml#L10) to use `Logstash:7.16.2`
+- Updated [Splunk log test](pipeline_testers/beats_input_test.py)
+- Updated [roles/splunk/setup_splunk.yml](roles/splunk/setup_splunk.yml) setup multiple datasources
+- Updated [roles/splunk/setup_logstash.yml](roles/splunk/setup_logstash.yml) setup multiple datasources
+
+### Bug Fixes
+
+- Upgrading Elastic stack to a version that is [not vulnerable to log4j](https://www.elastic.co/blog/new-elasticsearch-and-logstash-releases-upgrade-apache-log4j2)
+
+### CI/CD
+
+- Added GHA workflow to test changes to `docker-compose-elastic.yml`
+- Added GHA workflow to test changes to `deploy_elastic.yml`
+
+### Documentation
+
+- Updated Elastic supported version to v7.16.2 on [README](README.md)
+
 <a name="splunk-v8.2.4"></a>
 ## [splunk-v8.2.4](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/releases/tag/splunk-v8.2.4)
 

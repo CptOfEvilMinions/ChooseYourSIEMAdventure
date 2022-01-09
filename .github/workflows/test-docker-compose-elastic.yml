@@ -1,0 +1,66 @@
+name: Elastic docker-compose test
+
+on: 
+  # Only run when Elastic docker-compose changes
+  push:
+    paths:
+      - 'conf/docker/elastic/*'
+      - '.env'
+      - 'docker-compose-elastic.yml'
+
+  # Only run when PR is requesting to merge with main
+  pull_request:
+    branches:
+      - main
+
+jobs:  
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Generate TLS certs
+        run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
+      
+      - name: Build Docker images
+        run: 'docker-compose -f docker-compose-elastic.yml build'
+
+      - name: Lower CPU count on containers
+        run: "sed -i 's/cpus:.*/cpus: 1/g' docker-compose-elastic.yml"
+
+      - name: Run docker-compose
+        run: 'docker-compose -f docker-compose-elastic.yml up -d'
+
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
+        with:
+          requirement_files: pipeline_testers/requirements.txt
+
+      - uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      # the package installation will only be executed when the
+      # requirements-files have changed.
+      - run: pip3 install -r pipeline_testers/requirements.txt
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Wait until Splunk starts sucessfully
+        run: |
+          until curl -k -s https://127.0.0.1:8089/servicesNS/admin/search/auth/login -d 'username=admin' -d "password=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -d 'output_mode=json' | grep "sessionKey"
+          do
+            echo "[*] - Waiting on Splunk to start"
+            sleep 3
+          done
+          echo "[+] - Splunk has started"
+
+      - name: Test
+        run: |
+          python3 pipeline_testers/beats_input_test.py \
+          --platform elastic \
+          --host 127.0.0.1 \
+          --api_port 9200 \
+          --ingest_port 5044 \
+          --siem_username elastic \
+          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')

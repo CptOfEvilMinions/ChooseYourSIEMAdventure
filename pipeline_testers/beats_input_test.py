@@ -1,6 +1,7 @@
 from datetime import datetime, date, timezone
 from requests.auth import HTTPBasicAuth
 from pylogbeat import PyLogBeatClient
+from typing import Tuple
 import argparse
 import requests
 import json
@@ -12,7 +13,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class SIEM:
-  def __init__(self, host, port, platform, ingest_port, siem_username, siem_password, retries):
+  def __init__(self, host: str, port: int, platform: str, ingest_port: int, siem_username: str, siem_password: str, retries: int):
     self.host = host
     self.port = port
     self.siem_username = siem_username
@@ -31,7 +32,7 @@ class SIEM:
     return random_message
 
 
-def send_log(siem):
+def send_log(siem: SIEM) -> Tuple[bool, Exception]:
   """
   Send randomly generated message
   """
@@ -60,12 +61,12 @@ def send_log(siem):
     client.send([message])
     client.close()
     print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}") 
-    return True , None
+    return True, None
   except Exception as e:
     return False, e
 
 
-def check_graylog(siem):
+def check_graylog(siem: SIEM) -> bool:  
   """
   """
   headers ={
@@ -86,7 +87,7 @@ def check_graylog(siem):
   return False
 
 
-def check_elasticsearch(siem):
+def check_elasticsearch(siem: SIEM) -> bool:
   """
   """
   search_dict = {
@@ -97,10 +98,10 @@ def check_elasticsearch(siem):
     }
   }
   
-  indice_name = f"python-logstash-{str(datetime.utcnow().date()).replace('-','.')}"
+  indice_name = f"test-{str(datetime.utcnow().date()).replace('-','.')}"
   url = f"http://{siem.host}:{siem.port}/{indice_name}/_search"
 
-  for i in range(0, siem.retries):
+  for _ in range(0, siem.retries):
     result = requests.get(url=url, json=search_dict, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
     if int(result['hits']['total']['value']) > 0:
       return True
@@ -109,7 +110,7 @@ def check_elasticsearch(siem):
   return False
 
 
-def check_splunk(siem):  
+def check_splunk(siem: SIEM) -> bool:  
   """
   """
   #### Get session key ####
