@@ -103,10 +103,11 @@ def check_elasticsearch(siem: SIEM) -> bool:
 
   for _ in range(0, siem.retries):
     result = requests.get(url=url, json=search_dict, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
-    if int(result['hits']['total']['value']) > 0:
+    if result.get('hits', {}).get('total', {}).get('value',0) > 0:
       return True
-    time.sleep(3)
-
+    else:
+      print ("No hits")
+      time.sleep(3)
   return False
 
 
@@ -123,7 +124,7 @@ def check_splunk(siem: SIEM) -> bool:
 
   
   search_query = f"search index=main AND \"{siem.random_message}\""
-  for i in range(0, siem.retries):
+  for _ in range(0, siem.retries):
     #### Create search job ####
     sid = requests.post(url=f"https://{siem.host}:{siem.port}/services/search/jobs/", 
       data={ "search": search_query, "output_mode": "json"}, 
