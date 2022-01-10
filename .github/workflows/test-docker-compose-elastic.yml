@@ -62,12 +62,19 @@ jobs:
           done
           echo "[+] - Elasticsearch has started"
 
-          until netstat -tl | grep 5044 | grep LISTEN
-          do
-            echo "[*] - Waiting on Logstash to start"
+          until echo | openssl s_client -connect 127.0.0.1:5044 | grep "BEGIN CERTIFICATE"
+          do 
+            echo "[*] - Waiting on logstash"
             sleep 3
           done
           echo "[+] - Logstash has started"
+
+          until docker logs siem-elastic-logstash | grep "Starting server on port: 5044"services:
+          do 
+            echo "[*] - Waiting on Logstash Beats input to start"
+            sleep 3
+          done
+          echo "[+] - Logstash Beats input started"
 
       - name: Test
         run: |
