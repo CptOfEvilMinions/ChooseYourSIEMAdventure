@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install software
-        run: apt-get update -y && apt-get install libssl-dev -y
+        run: sudo apt-get update -y && sudo apt-get install libssl-dev -y
 
       - name: Generate TLS certs
         run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
