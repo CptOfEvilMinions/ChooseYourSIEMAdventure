@@ -48,8 +48,6 @@ jobs:
 
       - name: Wait until Elastic stack to start sucessfully
         run: |
-          docker logs -f siem-elastic-logstash
-          
           until curl -s -u "elastic:$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
           do
             echo "[*] - Waiting on Elasticsearch to start"
