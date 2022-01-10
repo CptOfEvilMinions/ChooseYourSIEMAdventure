@@ -39,6 +39,7 @@ jobs:
       - uses: syphar/restore-virtualenv@v1
         id: cache-virtualenv
         with:
+          python-version: '3.9'
           requirement_files: pipeline_testers/requirements.txt
 
       - uses: syphar/restore-pip-download-cache@v1
