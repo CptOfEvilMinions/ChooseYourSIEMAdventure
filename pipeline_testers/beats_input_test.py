@@ -9,6 +9,7 @@ import time
 import sys
 import string
 import random
+import socket
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -32,7 +33,28 @@ class SIEM:
     return random_message
 
 
-def send_log(siem: SIEM) -> Tuple[bool, Exception]:
+def wait_for_port(host: str, port: int, timeout: int):
+  """Wait until a port starts accepting TCP connections.
+  Args:
+      port (int): Port number.
+      host (str): Host address on which the port should exist.
+      timeout (float): In seconds. How long to wait before raising errors.
+  Raises:
+      TimeoutError: The port isn't accepting connection after time specified in `timeout`.
+  """
+  start_time = time.perf_counter()
+  while True:
+    try:
+      with socket.create_connection((host, port), timeout=timeout):
+        return True
+    except OSError:
+      time.sleep(3)
+      if time.perf_counter() - start_time >= timeout:
+        print (f'Waited too long for the port {port} on host {host} to start accepting connections.')
+        sys.exit(1)
+
+
+def send_log(siem: SIEM) -> bool:
   """
   Send randomly generated message
   """
@@ -51,24 +73,23 @@ def send_log(siem: SIEM) -> Tuple[bool, Exception]:
     }
   }
   print (message)
+
+  # Wait for port to be open
+  wait_for_port(siem.host, siem.ingest_port, timeout=30)
+
   
   # Create connector
   client = PyLogBeatClient(siem.host, siem.ingest_port, ssl_enable=True, ssl_verify=False)
+  if client.connect() != None:
+    sys.exit(1)
 
-  try:
-    # Connect to server, send log message, and close connection
-    client.connect()
-    for _ in range(0, siem.retries):
-      result = client.send([message])
-      print (result)
-      if result != None:
-        break
-      time.sleep(3)
-    client.close()
-    print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}") 
-    return True, None
-  except Exception as e:
-    return False, e
+  if client.send([message]) != None:
+    print (f"[-] - {datetime.now()} - Failed to send random message to {siem.platform} - {siem.host}:{siem.ingest_port}")
+    sys.exit(1)
+  
+  client.close()
+  print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}")
+  return True
 
 
 def check_graylog(siem: SIEM) -> bool:  
@@ -182,9 +203,7 @@ if __name__ == "__main__":
   siem = siem = SIEM(args.host, args.api_port, args.platform, args.ingest_port, args.siem_username, args.siem_password, args.retries)
 
   # Send random message
-  result, err = send_log(siem)
-  if err != None:
-    print (f"[-] - {datetime.now()} - Failed to send random message to {siem.platform} - {siem.host}:{siem.ingest_port}") 
+  if send_log(siem) == False:     
     sys.exit(1)
 
   # Query for random message
