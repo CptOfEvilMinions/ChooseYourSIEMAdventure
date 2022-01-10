@@ -83,6 +83,7 @@ services:
       - elastic-backend 
     ports:
       - 5044:5044
+      - 127.0.0.1:9600:9600
     cpus: 4
     mem_limit: 1G
     depends_on: 

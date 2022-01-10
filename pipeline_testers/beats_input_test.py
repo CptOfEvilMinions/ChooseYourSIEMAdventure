@@ -77,7 +77,6 @@ def send_log(siem: SIEM) -> bool:
   # Wait for port to be open
   wait_for_port(siem.host, siem.ingest_port, timeout=30)
 
-  
   # Create connector
   client = PyLogBeatClient(siem.host, siem.ingest_port, ssl_enable=True, ssl_verify=False)
   if client.connect() != None:
