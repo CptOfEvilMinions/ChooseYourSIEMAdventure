@@ -56,7 +56,7 @@ jobs:
           done
           echo "[+] - Elastic has started"
 
-          until docker logs -f siem-elastic-logstash | grep -m 1 "Starting server on port: 5044"
+          until docker logs -f siem-elastic-logstash | grep "Starting server on port: 5044"
           do
             echo "[*] - Waiting on Logstash Beats input to start"
             sleep 3
