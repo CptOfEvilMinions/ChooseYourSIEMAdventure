@@ -46,22 +46,15 @@ jobs:
       - run: pip3 install -r pipeline_testers/requirements.txt
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
-      - name: Wait until Elastic starts sucessfully
+      - name: Wait until Elastic stack to start sucessfully
         run: |
           
           until curl -s -u "elastic:$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
           do
-            echo "[*] - Waiting on Elastic to start"
+            echo "[*] - Waiting on Elasticsearch to start"
             sleep 3
           done
-          echo "[+] - Elastic has started"
-
-          until docker logs -f siem-elastic-logstash | grep "Starting server on port: 5044"
-          do
-            echo "[*] - Waiting on Logstash Beats input to start"
-            sleep 3
-          done
-          echo "[+] - Logstash Beats input has started"
+          echo "[+] - Elasticsearch has started"
 
           until netstat -tl | grep 5044 | grep LISTEN
           do
