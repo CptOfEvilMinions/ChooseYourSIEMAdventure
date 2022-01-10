@@ -20,9 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install software
-        run: sudo apt-get update -y && sudo apt-get install libssl-dev -y
-
       - name: Generate TLS certs
         run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
       
@@ -62,7 +59,7 @@ jobs:
           done
           echo "[+] - Elasticsearch has started"
 
-          until echo | openssl s_client -connect 127.0.0.1:5044 | grep "BEGIN CERTIFICATE"
+          until echo | openssl s_client -connect 127.0.0.1:5044 2> /dev/null | grep "BEGIN CERTIFICATE"
           do 
             echo "[*] - Waiting on logstash"
             sleep 3

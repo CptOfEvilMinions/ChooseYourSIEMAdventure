@@ -1,9 +1,3 @@
 pylogbeat==2.0.0
 requests==2.25.1
 mock==4.0.3
-pyOpenSSL==21.0.0
-cryptography==36.0.1
-six==1.16.0
-pycparser==2.21
-ndg_httpsclient==0.5.1
-pyasn1==0.4.8
