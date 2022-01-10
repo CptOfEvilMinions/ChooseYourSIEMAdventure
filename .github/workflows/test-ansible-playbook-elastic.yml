@@ -1,7 +1,7 @@
-name: Splunk Ansible playbook test
+name: Elastic Ansible playbook test
 
 on: 
-  # Only run when Splunk docker-compose changes
+  # Only run when Elastic docker-compose changes
   push:
     paths:
       - 'group_vars/elastic.yml'
