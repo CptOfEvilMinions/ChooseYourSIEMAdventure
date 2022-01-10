@@ -36,13 +36,16 @@ jobs:
         run: 'docker-compose -f docker-compose-elastic.yml up -d'
 
       - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
       - uses: syphar/restore-virtualenv@v1
         id: cache-virtualenv
         with:
-          python-version: '3.9'
           requirement_files: pipeline_testers/requirements.txt
 
       - uses: syphar/restore-pip-download-cache@v1
+      
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
       # the package installation will only be executed when the
