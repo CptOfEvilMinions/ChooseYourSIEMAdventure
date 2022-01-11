@@ -22,9 +22,6 @@ jobs:
       - name: Docker Swarm init
         run: sudo docker swarm init --advertise-addr 127.0.0.1
       
-      - name: Lower CPU count on containers
-        run: "sed -i 's/cpus:.*/cpus: 1/g' docker-compose-swarm-graylog.yml"
-      
       - name: Generate TLS certs
         run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
 

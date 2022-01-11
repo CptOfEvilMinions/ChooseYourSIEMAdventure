@@ -24,10 +24,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
           memory: 150M
         reservations:
-          cpus: '0.25'
           memory: 100M
       restart_policy:
         condition: on-failure
@@ -76,10 +74,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
           memory: 1G
         reservations:
-          cpus: '1'
           memory: 500M
       restart_policy:
         condition: on-failure
@@ -105,10 +101,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
           memory: 300M
         reservations:
-          cpus: '0.25'
           memory: 50M
       restart_policy:
         condition: on-failure
@@ -144,10 +138,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
           memory: 2G
         reservations:
-          cpus: '1'
           memory: 100M
       restart_policy:
         condition: on-failure
