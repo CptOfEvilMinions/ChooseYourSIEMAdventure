@@ -59,7 +59,7 @@ jobs:
           done
           echo "[+] - Logstash has started"
 
-          until docker logs splunk_logstash | grep "Starting server on port: 5044"
+          until docker service logs splunk_logstash | grep "Starting server on port: 5044"
           do 
             echo "[*] - Waiting on Logstash Beats input to start"
             sleep 3
