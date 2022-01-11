@@ -1,0 +1,90 @@
+name: Elastic Docker Swarm test
+
+on: 
+  # Only run when Elastic docker-compose changes
+  push:
+    paths:
+      - 'conf/docker/elastic/*'
+      - 'docker-compose-swarm-elastic.yml'
+
+  # Only run when PR is requesting to merge with main
+  pull_request:
+    branches:
+      - main
+
+jobs:  
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Docker Swarm init
+        run: sudo docker swarm init --advertise-addr 127.0.0.1
+      
+      - name: Generate TLS certs
+        run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
+
+      - name: Spin up Docker swarm stack for Elastic
+        run: |
+          for user in 'elastic' 'kibana_system' 'logstash_system' 'beats_system' 'apm_system' 'remote_monitoring_user' 'logstash_writer'
+          do 
+            export ${user}_pass=${pass}
+            pass=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
+            echo ${pass} | docker secret create elastic-builtin-${user} - 
+            echo ${user} - ${pass}
+          done
+          echo "[*] - elastic password: ${elastic_pass}"
+          docker stack deploy -c docker-compose-swarm-elastic.yml elastic
+
+      - name: Wait until Elasticsearch to start sucessfully
+        run: |
+          until docker ps | grep elastic_elasticsearch 
+          do
+            echo "[*] - Waiting on Elasticsearch to start"
+            sleep 3
+          done 
+
+      - name: Run Elasticsearch entrypoint.sh
+        run: docker exec -i $(docker ps | grep elastic_elasticsearch | awk '{print $1}') /usr/share/elasticsearch/elasticsearch-entrypoint.sh
+
+      - name: Wait for Logstash to start
+        run: |
+          until echo | openssl s_client -connect 127.0.0.1:5044 2> /dev/null | grep "BEGIN CERTIFICATE"
+          do 
+            echo "[*] - Waiting on logstash"
+            sleep 3
+          done
+          echo "[+] - Logstash has started"
+
+          until docker logs siem-elastic-logstash | grep "Starting server on port: 5044"
+          do 
+            echo "[*] - Waiting on Logstash Beats input to start"
+            sleep 3
+          done
+          echo "[+] - Logstash Beats input started"
+
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
+        with:
+          requirement_files: pipeline_testers/requirements.txt
+
+      - uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      # the package installation will only be executed when the
+      # requirements-files have changed.
+      - run: pip3 install -r pipeline_testers/requirements.txt
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Test
+        run: |
+          python3 pipeline_testers/beats_input_test.py \
+          --platform elastic \
+          --host 127.0.0.1 \
+          --api_port 8443 \
+          --ingest_port 5044 \
+          --siem_username elastic \
+          --siem_password ${elastic_pass}
+
