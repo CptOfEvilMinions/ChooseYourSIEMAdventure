@@ -20,6 +20,7 @@
 - Removed `cpus: X` from [docker-compose-swarm-elastic.yml](docker-compose-swarm-elastic.yml)
 - Removed `cpus: X` from [docker-compose-swarm-splunk.yml](docker-compose-swarm-splunk.yml)
 - Removed `cpus: X` from [docker-compose-swarm-splunk.yml](docker-compose-swarm-splunk.yml)
+- Updated [generate_beats_input_docker_swarm.sh](conf/docker/graylog/generate_beats_input_docker_swarm.sh)
 
 
 ### Bug Fixes
