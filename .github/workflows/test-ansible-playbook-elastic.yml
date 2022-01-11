@@ -65,7 +65,6 @@ jobs:
 
       - name: Wait until Elastic stack to start sucessfully
         run: |
-          cat /tmp/elasticsearch-setup-passwords.txt
           until curl -s -u "elastic:$(cat /tmp/elasticsearch-setup-passwords.txt | grep elastic | awk -F' ' '{print $4}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
           do
             echo "[*] - Waiting on Elasticsearch to start"
@@ -81,7 +80,7 @@ jobs:
           echo "[+] - Logstash has started"
 
           
-          tail -f /var/log/logstash/logstash-plain.log | grep -qx "Starting server on port: 5044"
+          until cat /var/log/logstash/logstash-plain.log | grep "Starting server on port: 5044"
           do 
             echo "[*] - Waiting on Logstash Beats input to start"
             sleep 3
