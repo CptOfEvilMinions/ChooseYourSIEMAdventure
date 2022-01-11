@@ -22,6 +22,7 @@
 - Removed `cpus: X` from [docker-compose-swarm-splunk.yml](docker-compose-swarm-splunk.yml)
 - Updated [generate_beats_input_docker_swarm.sh](conf/docker/graylog/generate_beats_input_docker_swarm.sh)
 - Added [test-docker-compose-swarm-graylog.yml](.github/workflows/test-docker-compose-swarm-graylog.yml) for testing Graylog Docker Swarm
+- Added [test-docker-compose-swarm-elastic.yml](.github/workflows/test-docker-compose-swarm-elastic.yml) for testing Elastic Docker Swarm
 
 ### Bug Fixes
 

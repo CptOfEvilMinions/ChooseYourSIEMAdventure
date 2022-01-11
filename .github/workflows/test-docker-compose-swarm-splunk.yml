@@ -1,0 +1,92 @@
+name: Splunk Docker Swarm test
+
+on: 
+  # Only run when Splunk docker-compose changes
+  push:
+    paths:
+      - 'conf/docker/splunk/*'
+      - 'docker-compose-swarm-splunk.yml'
+
+  # Only run when PR is requesting to merge with main
+  pull_request:
+    branches:
+      - main
+
+jobs:  
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Docker Swarm init
+        run: sudo docker swarm init --advertise-addr 127.0.0.1
+      
+      - name: Generate TLS certs
+        run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
+
+      - name: Spin up Docker swarm stack for Splunk
+        run: |
+          SPLUNK_ADMIN_PASSWORD=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
+          SPLUNK_HEC_TOKEN=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
+
+          docker run -it \
+          -e SPLUNK_PASSWORD=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}') \
+          -e SPLUNK_HEC_TOKEN=${SPLUNK_HEC_TOKEN} \
+          -e SPLUNK_HEC_SSL=false \
+          splunk/splunk:$(cat .env | grep SPLUNK_VERSION | awk -F'=' '{print $2}') \
+          create-defaults > conf/docker/splunk/default.yml
+      
+          echo $SPLUNK_HEC_TOKEN | docker secret create splunk-hec-token -
+          cat conf/docker/splunk/default.yml | docker secret create splunk-default-conf -
+          docker stack deploy -c docker-compose-swarm-splunk.yml splunk
+
+      - name: Wait until Splunk starts sucessfully
+        run: |
+          until curl -k -s https://127.0.0.1:8089/servicesNS/admin/search/auth/login -d 'username=admin' -d "password=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -d 'output_mode=json' | grep "sessionKey"
+          do
+            echo "[*] - Waiting on Splunk to start"
+            sleep 3
+          done
+          echo "[+] - Splunk has started"
+
+      - name: Wait for Logstash to start
+        run: |
+          until echo | openssl s_client -connect 127.0.0.1:5044 2> /dev/null | grep "BEGIN CERTIFICATE"
+          do 
+            echo "[*] - Waiting on logstash"
+            sleep 3
+          done
+          echo "[+] - Logstash has started"
+
+          until docker logs siem-elastic-logstash | grep "Starting server on port: 5044"
+          do 
+            echo "[*] - Waiting on Logstash Beats input to start"
+            sleep 3
+          done
+          echo "[+] - Logstash Beats input started"
+      
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
+        with:
+          requirement_files: pipeline_testers/requirements.txt
+
+      - uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      # the package installation will only be executed when the
+      # requirements-files have changed.
+      - run: pip3 install -r pipeline_testers/requirements.txt
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Test
+        run: |
+          python3 pipeline_testers/beats_input_test.py \
+          --platform splunk \
+          --host 127.0.0.1 \
+          --api_port 8089 \
+          --ingest_port 5044 \
+          --siem_username admin \
+          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
+
