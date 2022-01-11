@@ -82,11 +82,12 @@ jobs:
 
       - name: Test
         run: |
+          echo $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
           python3 pipeline_testers/beats_input_test.py \
           --platform splunk \
           --host 127.0.0.1 \
           --api_port 8089 \
           --ingest_port 5044 \
           --siem_username admin \
-          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
+          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}' | xargs)
 

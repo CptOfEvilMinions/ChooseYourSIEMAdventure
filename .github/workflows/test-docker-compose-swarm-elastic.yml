@@ -36,6 +36,7 @@ jobs:
           done
           echo "[*] - elastic password: ${elastic_pass}"
           docker stack deploy -c docker-compose-swarm-elastic.yml elastic
+          cat /tmp/elasticsearch-setup-passwords.txt
 
       - name: Wait until Elasticsearch to start sucessfully
         run: |
@@ -80,6 +81,7 @@ jobs:
 
       - name: Test
         run: |
+          echo $(cat /tmp/elasticsearch-setup-passwords.txt | grep elastic | awk -F' ' '{print $4}')
           python3 pipeline_testers/beats_input_test.py \
           --platform elastic \
           --host 127.0.0.1 \
