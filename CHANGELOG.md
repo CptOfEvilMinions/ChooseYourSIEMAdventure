@@ -17,6 +17,9 @@
 - Updated [docker-compose-swarm-traefik-elastic.yml](docker-compose-swarm-elastic.yml#L95) to use `logstash:7.16.2`
 - Updated [group_vars/elastic.yml](group_vars/elastic.yml#L4) to use Elastic v7.16.2
 - Updated [Elastic log test](pipeline_testers/beats_input_test.py#L115)
+- Removed `cpus: X` from [docker-compose-swarm-elastic.yml](docker-compose-swarm-elastic.yml)
+- Removed `cpus: X` from [docker-compose-swarm-splunk.yml](docker-compose-swarm-splunk.yml)
+- Removed `cpus: X` from [docker-compose-swarm-splunk.yml](docker-compose-swarm-splunk.yml)
 
 
 ### Bug Fixes
