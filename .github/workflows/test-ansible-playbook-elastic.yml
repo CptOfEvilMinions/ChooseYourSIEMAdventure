@@ -95,4 +95,4 @@ jobs:
           --api_port 9200 \
           --ingest_port 5044 \
           --siem_username elastic \
-          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
+          --siem_password $(cat /tmp/elasticsearch-setup-passwords.txt | grep elastic | awk -F' ' '{print $4}')
