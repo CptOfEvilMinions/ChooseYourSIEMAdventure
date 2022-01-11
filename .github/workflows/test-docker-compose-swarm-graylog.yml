@@ -36,7 +36,7 @@ jobs:
           echo ${GRAYLOG_ES_PASSWORD} | docker secret create graylog-elasticsearch-password -
           echo "http://elastic:${GRAYLOG_ES_PASSWORD}@elasticsearch:9200" | docker secret create graylog-es-uri -
           cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}' | tr -d '\n' | openssl sha256 | cut -d" " -f2 | docker secret create graylog-root-password-sha2 -
-          openssl rand -base64 32 | tr -cd '[:alnum:]' | docker secret graylog-password-secret - 
+          openssl rand -base64 32 | tr -cd '[:alnum:]' | docker secret create graylog-password-secret - 
           docker stack deploy -c docker-compose-swarm-graylog.yml graylog
 
       - name: Wait until graylog starts sucessfully
