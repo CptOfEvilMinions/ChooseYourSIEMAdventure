@@ -233,7 +233,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Log4Shell Vulnerability (CVE-2021-44228, CVE-2021-45046 and CVE-2021-45105) and MongoDB](https://www.mongodb.com/blog/post/log4shell-vulnerability-cve-2021-44228-and-mongodb)
 * [GRAYLOG UPDATE FOR LOG4J](https://www.graylog.org/post/graylog-update-for-log4j)
 * [pymongo - release history](https://pypi.org/project/pymongo/#history)
-* []()
+* [How To Bash Shell Find Out If a Variable Is Empty Or Not](https://www.cyberciti.biz/faq/unix-linux-bash-script-check-if-variable-is-empty/)
 * []()
 * []()
 

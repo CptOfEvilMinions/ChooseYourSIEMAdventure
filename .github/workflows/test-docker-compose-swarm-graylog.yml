@@ -50,7 +50,7 @@ jobs:
 
       - name: Create Graylog Beats input
         run: |
-          docker exec -it $(docker ps | grep graylog_graylog | awk '{print $1}') \
+          docker exec -i $(docker ps | grep graylog_graylog | awk '{print $1}') \
           sh -c "SIEM_USERNAME=admin SIEM_PASSWORD=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}' | xargs) /usr/share/graylog/generate_beats_input.sh"
 
       - uses: actions/setup-python@v2
