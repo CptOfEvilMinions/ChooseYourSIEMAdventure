@@ -53,6 +53,15 @@ jobs:
           docker exec -i $(docker ps | grep graylog_graylog | awk '{print $1}') \
           sh -c "SIEM_USERNAME=admin SIEM_PASSWORD=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}' | xargs) /usr/share/graylog/generate_beats_input.sh"
 
+      - name: Wait until graylog NGINX AND API to starts sucessfully
+        run: |
+          until curl -k -s -X GET https://127.0.0.1:8443/api | grep "cluster_id"
+          do
+            echo "[*] - Waiting on Graylog to start"
+            sleep 3
+          done
+          echo "[+] - Graylog has started"
+
       - uses: actions/setup-python@v2
       - uses: syphar/restore-virtualenv@v1
         id: cache-virtualenv
