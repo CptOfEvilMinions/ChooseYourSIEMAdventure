@@ -30,7 +30,7 @@ jobs:
           SPLUNK_ADMIN_PASSWORD=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
           SPLUNK_HEC_TOKEN=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
 
-          docker run -it \
+          docker run -i \
           -e SPLUNK_PASSWORD=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}') \
           -e SPLUNK_HEC_TOKEN=${SPLUNK_HEC_TOKEN} \
           -e SPLUNK_HEC_SSL=false \
