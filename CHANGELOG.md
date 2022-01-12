@@ -1,7 +1,7 @@
 # ChooseYourSIEMAdventure Changelog
 
 <a name="ChooseYourSIEMAdventure-v1.1"></a>
-## [elastic-v7.16.2](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/releases/tag/ChooseYourSIEMAdventure-v1.1)
+## [ChooseYourSIEMAdventure-v1.1](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/releases/tag/ChooseYourSIEMAdventure-v1.1)
 
 [Git Commits](https://github.com/CptOfEvilMinions/ChooseYourSIEMAdventure/compare/ChooseYourSIEMAdventure-v1.0.0...ChooseYourSIEMAdventure-v1.1)
 
