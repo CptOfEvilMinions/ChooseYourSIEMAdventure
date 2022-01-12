@@ -23,6 +23,7 @@
 - Updated [generate_beats_input_docker_swarm.sh](conf/docker/graylog/generate_beats_input_docker_swarm.sh)
 - Added [test-docker-compose-swarm-graylog.yml](.github/workflows/test-docker-compose-swarm-graylog.yml) for testing Graylog Docker Swarm
 - Added [test-docker-compose-swarm-elastic.yml](.github/workflows/test-docker-compose-swarm-elastic.yml) for testing Elastic Docker Swarm
+- Updated [30-output-splunk-hec.conf](conf/docker/splunk/30-output-splunk-hec.conf#L28) for pipeline tester script
 
 ### Bug Fixes
 
