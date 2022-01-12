@@ -85,7 +85,7 @@ jobs:
           python3 pipeline_testers/beats_input_test.py \
           --platform elastic \
           --host 127.0.0.1 \
-          --api_port 8443 \
+          --api_port 9200 \
           --ingest_port 5044 \
           --siem_username elastic \
           --siem_password $(cat /tmp/elasticsearch-setup-passwords.txt | grep elastic | awk -F' ' '{print $4}')
