@@ -1,0 +1,88 @@
+name: Graylog Docker Swarm test
+
+on: 
+  # Only run when Graylog docker-compose changes
+  push:
+    paths:
+      - 'conf/docker/graylog/*'
+      - 'docker-compose-swarm-graylog.yml'
+
+  # Only run when PR is requesting to merge with main
+  pull_request:
+    branches:
+      - main
+
+jobs:  
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Docker Swarm init
+        run: sudo docker swarm init --advertise-addr 127.0.0.1
+      
+      - name: Generate TLS certs
+        run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
+
+      - name: Spin up Docker swarm stack for Graylog
+        run: |
+          GRAYLOG_MONGO_USERNAME=graylog-mongo
+          GRAYLOG_MONGO_PASSWORD=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
+          echo ${GRAYLOG_MONGO_USERNAME} | docker secret create graylog-mongo-username -
+          echo ${GRAYLOG_MONGO_PASSWORD} | docker secret create graylog-mongo-password -
+          echo "mongodb://${GRAYLOG_MONGO_USERNAME}:${GRAYLOG_MONGO_PASSWORD}@mongo:27017/graylog?authSource=admin&authMechanism=SCRAM-SHA-1" | docker secret create graylog-mongo-uri -
+          GRAYLOG_ES_PASSWORD=$(openssl rand -base64 32 | tr -cd '[:alnum:]')
+          echo ${GRAYLOG_ES_PASSWORD} | docker secret create graylog-elasticsearch-password -
+          echo "http://elastic:${GRAYLOG_ES_PASSWORD}@elasticsearch:9200" | docker secret create graylog-es-uri -
+          cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}' | tr -d '\n' | openssl sha256 | cut -d" " -f2 | docker secret create graylog-root-password-sha2 -
+          openssl rand -base64 32 | tr -cd '[:alnum:]' | docker secret create graylog-password-secret - 
+          docker stack deploy -c docker-compose-swarm-graylog.yml graylog
+
+      - name: Wait until graylog starts sucessfully
+        run: |
+          until docker service logs graylog_graylog | grep "INFO : org.graylog2.bootstrap.ServerBootstrap - Graylog server up and running"
+          do
+            echo "[*] - Waiting on Graylog to start"
+            sleep 3
+          done
+          echo "[+] - Graylog has started"
+
+      - name: Create Graylog Beats input
+        run: |
+          docker exec -i $(docker ps | grep graylog_graylog | awk '{print $1}') \
+          sh -c "SIEM_USERNAME=admin SIEM_PASSWORD=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}' | xargs) /usr/share/graylog/generate_beats_input.sh"
+
+      - name: Wait until graylog NGINX AND API to starts sucessfully
+        run: |
+          until curl -k -s -X GET https://127.0.0.1:8443/api | grep "cluster_id"
+          do
+            echo "[*] - Waiting on Graylog to start"
+            sleep 3
+          done
+          echo "[+] - Graylog has started"
+
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
+        with:
+          requirement_files: pipeline_testers/requirements.txt
+
+      - uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      # the package installation will only be executed when the
+      # requirements-files have changed.
+      - run: pip3 install -r pipeline_testers/requirements.txt
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Test
+        run: |
+          python3 pipeline_testers/beats_input_test.py \
+          --platform graylog \
+          --host 127.0.0.1 \
+          --api_port 8443 \
+          --ingest_port 5044 \
+          --siem_username admin \
+          --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')
+

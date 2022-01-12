@@ -19,7 +19,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 
 ## Supported versions
 * `Graylog v4.2.4`
-* `Elastic v7.15.1`
+* `Elastic v7.16.2`
 * `Splunk v8.2.4`
 * `Ansible v2.12.1+`
     * `ansible-galaxy: community.mongodb >= 1.3.2`
@@ -33,8 +33,8 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [How to wait till a particular line appears in a file](https://stackoverflow.com/questions/25959870/how-to-wait-till-a-particular-line-appears-in-a-file)
 * [restore or create a python virtualenv](https://github.com/marketplace/actions/restore-or-create-a-python-virtualenv)
 * [docker-compose-actions-workflow](https://github.com/peter-evans/docker-compose-actions-workflow)
-* []()
-* []()
+* [GitHub Action - restore pip download cache](https://github.com/marketplace/actions/restore-pip-download-cache)
+* [setup-python V2](https://github.com/actions/setup-python)
 * []()
 * []()
 * []()
@@ -108,6 +108,11 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [How to get current date and time in Python?](https://www.programiz.com/python-programming/datetime/current-datetime)
 * [StackOverFlow - Random string generation with upper case letters and digits](https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits)
 * [Suppress InsecureRequestWarning: Unverified HTTPS request is being made in Python2.6](https://stackoverflow.com/questions/27981545/suppress-insecurerequestwarning-unverified-https-request-is-being-made-in-pytho)
+* [Safe method to get value of nested dictionary](https://stackoverflow.com/questions/25833613/safe-method-to-get-value-of-nested-dictionary)
+* [Bash while loop stop after a successful curl request [duplicate]](https://unix.stackexchange.com/questions/644343/bash-while-loop-stop-after-a-successful-curl-request)
+* [cat indices API](https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-indices.html)
+* [Connections fail on Python 3.10](https://giters.com/websocket-client/websocket-client/issues/744)
+* [[Solved] Python requests.exceptions.SSL: EOF occurred in violation of protocol](https://flutterq.com/solved-python-requests-exceptions-ssl-eof-occurred-in-violation-of-protocol/)
 * []()
 * []()
 
@@ -228,7 +233,7 @@ The Ansible playbooks will automatically set the heap size to half of total syst
 * [Log4Shell Vulnerability (CVE-2021-44228, CVE-2021-45046 and CVE-2021-45105) and MongoDB](https://www.mongodb.com/blog/post/log4shell-vulnerability-cve-2021-44228-and-mongodb)
 * [GRAYLOG UPDATE FOR LOG4J](https://www.graylog.org/post/graylog-update-for-log4j)
 * [pymongo - release history](https://pypi.org/project/pymongo/#history)
-* []()
+* [How To Bash Shell Find Out If a Variable Is Empty Or Not](https://www.cyberciti.biz/faq/unix-linux-bash-script-check-if-variable-is-empty/)
 * []()
 * []()
 

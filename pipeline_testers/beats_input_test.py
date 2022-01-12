@@ -1,6 +1,7 @@
 from datetime import datetime, date, timezone
 from requests.auth import HTTPBasicAuth
 from pylogbeat import PyLogBeatClient
+from typing import Tuple
 import argparse
 import requests
 import json
@@ -8,11 +9,12 @@ import time
 import sys
 import string
 import random
+import socket
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class SIEM:
-  def __init__(self, host, port, platform, ingest_port, siem_username, siem_password, retries):
+  def __init__(self, host: str, port: int, platform: str, ingest_port: int, siem_username: str, siem_password: str, retries: int):
     self.host = host
     self.port = port
     self.siem_username = siem_username
@@ -31,7 +33,28 @@ class SIEM:
     return random_message
 
 
-def send_log(siem):
+def wait_for_port(host: str, port: int, timeout: int):
+  """Wait until a port starts accepting TCP connections.
+  Args:
+      port (int): Port number.
+      host (str): Host address on which the port should exist.
+      timeout (float): In seconds. How long to wait before raising errors.
+  Raises:
+      TimeoutError: The port isn't accepting connection after time specified in `timeout`.
+  """
+  start_time = time.perf_counter()
+  while True:
+    try:
+      with socket.create_connection((host, port), timeout=timeout):
+        return True
+    except OSError:
+      time.sleep(3)
+      if time.perf_counter() - start_time >= timeout:
+        print (f'Waited too long for the port {port} on host {host} to start accepting connections.')
+        sys.exit(1)
+
+
+def send_log(siem: SIEM) -> bool:
   """
   Send randomly generated message
   """
@@ -50,22 +73,25 @@ def send_log(siem):
     }
   }
   print (message)
-  
+
+  # Wait for port to be open
+  wait_for_port(siem.host, siem.ingest_port, timeout=30)
+
   # Create connector
   client = PyLogBeatClient(siem.host, siem.ingest_port, ssl_enable=True, ssl_verify=False)
+  if client.connect() != None:
+    sys.exit(1)
 
-  try:
-    # Connect to server, send log message, and close connection
-    client.connect()
-    client.send([message])
-    client.close()
-    print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}") 
-    return True , None
-  except Exception as e:
-    return False, e
+  if client.send([message]) != None:
+    print (f"[-] - {datetime.now()} - Failed to send random message to {siem.platform} - {siem.host}:{siem.ingest_port}")
+    sys.exit(1)
+  
+  client.close()
+  print (f"[+] - {datetime.now()} - Sucessfully sent random message to {siem.platform} - {siem.host}:{siem.port}")
+  return True
 
 
-def check_graylog(siem):
+def check_graylog(siem: SIEM) -> bool:  
   """
   """
   headers ={
@@ -77,7 +103,7 @@ def check_graylog(siem):
   # Generate URL
   url = f"https://{siem.host}:{siem.port}/api/search/universal/relative?query={siem.random_message}&range=3600&limit=100&sort=timestamp:desc&pretty=true"
 
-  for i in range(0, siem.retries):
+  for _ in range(0, siem.retries):
     result = requests.get(url=url, headers=headers, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
     if len(result['messages']) > 0:
       return True
@@ -86,7 +112,7 @@ def check_graylog(siem):
   return False
 
 
-def check_elasticsearch(siem):
+def check_elasticsearch(siem: SIEM) -> bool:
   """
   """
   search_dict = {
@@ -97,19 +123,20 @@ def check_elasticsearch(siem):
     }
   }
   
-  indice_name = f"python-logstash-{str(datetime.utcnow().date()).replace('-','.')}"
+  indice_name = f"test-{str(datetime.utcnow().date()).replace('-','.')}"
   url = f"http://{siem.host}:{siem.port}/{indice_name}/_search"
 
-  for i in range(0, siem.retries):
+  for _ in range(0, siem.retries):
     result = requests.get(url=url, json=search_dict, auth=HTTPBasicAuth(siem.siem_username, siem.siem_password), verify=False).json()
-    if int(result['hits']['total']['value']) > 0:
+    if result.get('hits', {}).get('total', {}).get('value',0) > 0:
       return True
-    time.sleep(3)
-
+    else:
+      print ("No hits")
+      time.sleep(3)
   return False
 
 
-def check_splunk(siem):  
+def check_splunk(siem: SIEM) -> bool:  
   """
   """
   #### Get session key ####
@@ -122,7 +149,7 @@ def check_splunk(siem):
 
   
   search_query = f"search index=main AND \"{siem.random_message}\""
-  for i in range(0, siem.retries):
+  for _ in range(0, siem.retries):
     #### Create search job ####
     sid = requests.post(url=f"https://{siem.host}:{siem.port}/services/search/jobs/", 
       data={ "search": search_query, "output_mode": "json"}, 
@@ -175,9 +202,8 @@ if __name__ == "__main__":
   siem = siem = SIEM(args.host, args.api_port, args.platform, args.ingest_port, args.siem_username, args.siem_password, args.retries)
 
   # Send random message
-  result, err = send_log(siem)
-  if err != None:
-    print (f"[-] - {datetime.now()} - Failed to send random message to {siem.platform} - {siem.host}:{siem.ingest_port}") 
+  if send_log(siem) == False:     
+    sys.exit(1)
 
   # Query for random message
   if siem.platform == 'elastic' and check_elasticsearch(siem):
@@ -188,3 +214,4 @@ if __name__ == "__main__":
     print (f"[+] - {datetime.now()} - Random message: {siem.random_message} ingested in {siem.platform}")
   else:
     print ("Failed")
+    sys.exit(1)

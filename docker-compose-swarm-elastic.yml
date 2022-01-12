@@ -2,7 +2,7 @@ version: "3.9"
 services: 
   ###################################################### NGINX ######################################################
   nginx:
-    image: nginx:1.21.3-alpine
+    image: nginx:1.21.5-alpine
     configs:
       - source: nginx-conf
         target: /etc/nginx/nginx.conf
@@ -24,10 +24,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
           memory: 150M
         reservations:
-          cpus: '0.25'
           memory: 100M
       restart_policy:
         condition: on-failure
@@ -37,7 +35,7 @@ services:
 
   ###################################################### Kibana ######################################################
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.15.1
+    image: docker.elastic.co/kibana/kibana:7.16.2
     entrypoint: /docker-entrypoint-initdb.d/kibana-entrypoint.sh
     secrets:
       - elastic-builtin-kibana_system
@@ -57,10 +55,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
           memory: 1G
         reservations:
-          cpus: '0.5'
           memory: 100M
       restart_policy:
         condition: on-failure
@@ -70,7 +66,7 @@ services:
 
   ###################################################### Elasticsearch ######################################################
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
     #command: ["eswrapper", ";", "whoami", ";", "/usr/share/elasticsearch/elasticsearch-entrypoint.sh",  ";", "whoami"] 
     configs: 
       #### entrypoint ###
@@ -108,10 +104,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
           memory: 1G
         reservations:
-          cpus: '1'
           memory: 300M
       restart_policy:
         condition: on-failure
@@ -121,7 +115,7 @@ services:
 
   ###################################################### Logstash ######################################################
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.15.1
+    image: docker.elastic.co/logstash/logstash:7.16.2
     entrypoint: /usr/share/logstash/logstash-entrypoint.sh
     configs: 
       #### entrypoint ###
@@ -164,10 +158,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
           memory: 1G
         reservations:
-          cpus: '1'
           memory: 500M
       restart_policy:
         condition: on-failure

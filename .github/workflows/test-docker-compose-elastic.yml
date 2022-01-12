@@ -1,12 +1,12 @@
-name: Splunk docker-compose test
+name: Elastic docker-compose test
 
 on: 
-  # Only run when Splunk docker-compose changes
+  # Only run when Elastic docker-compose changes
   push:
     paths:
-      - 'conf/docker/splunk/*'
+      - 'conf/docker/elastic/*'
       - '.env'
-      - 'docker-compose-splunk.yml'
+      - 'docker-compose-elastic.yml'
 
   # Only run when PR is requesting to merge with main
   pull_request:
@@ -19,20 +19,23 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Generate TLS certs
         run: 'openssl req -x509 -new -nodes -keyout conf/tls/tls.key -out conf/tls/tls.crt -config conf/tls/tls.conf'
       
       - name: Build Docker images
-        run: 'docker-compose -f docker-compose-splunk.yml build'
+        run: 'docker-compose -f docker-compose-elastic.yml build'
 
       - name: Lower CPU count on containers
-        run: "sed -i 's/cpus:.*/cpus: 1/g' docker-compose-splunk.yml"
+        run: "sed -i 's/cpus:.*/cpus: 1/g' docker-compose-elastic.yml"
 
       - name: Run docker-compose
-        run: 'docker-compose -f docker-compose-splunk.yml up -d'
+        run: 'docker-compose -f docker-compose-elastic.yml up -d'
 
       - uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
       - uses: syphar/restore-virtualenv@v1
         id: cache-virtualenv
         with:
@@ -46,17 +49,15 @@ jobs:
       - run: pip3 install -r pipeline_testers/requirements.txt
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
-      - name: Wait until Splunk starts sucessfully
+      - name: Wait until Elastic stack to start sucessfully
         run: |
-          until curl -k -s https://127.0.0.1:8089/servicesNS/admin/search/auth/login -d 'username=admin' -d "password=$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -d 'output_mode=json' | grep "sessionKey"
+          until curl -s -u "elastic:$(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')" -X GET "http://127.0.0.1:9200/_cat/indices/*?v=true&s=index&pretty" | grep "uuid"
           do
-            echo "[*] - Waiting on Splunk to start"
+            echo "[*] - Waiting on Elasticsearch to start"
             sleep 3
           done
-          echo "[+] - Splunk has started"
+          echo "[+] - Elasticsearch has started"
 
-      - name: Wait for Logstash to start
-        run: |
           until echo | openssl s_client -connect 127.0.0.1:5044 2> /dev/null | grep "BEGIN CERTIFICATE"
           do 
             echo "[*] - Waiting on logstash"
@@ -64,7 +65,7 @@ jobs:
           done
           echo "[+] - Logstash has started"
 
-          until docker logs siem-splunk-logstash | grep "Starting server on port: 5044"
+          until docker logs siem-elastic-logstash | grep "Starting server on port: 5044"
           do 
             echo "[*] - Waiting on Logstash Beats input to start"
             sleep 3
@@ -74,9 +75,9 @@ jobs:
       - name: Test
         run: |
           python3 pipeline_testers/beats_input_test.py \
-          --platform splunk \
+          --platform elastic \
           --host 127.0.0.1 \
-          --api_port 8089 \
+          --api_port 9200 \
           --ingest_port 5044 \
-          --siem_username admin \
+          --siem_username elastic \
           --siem_password $(cat .env | grep SIEM_PASSWORD | awk -F '=' '{print $2}')

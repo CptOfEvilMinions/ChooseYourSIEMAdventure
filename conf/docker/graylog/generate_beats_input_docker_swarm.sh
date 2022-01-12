@@ -1,10 +1,10 @@
 #!/bin/bash
-SIEM_USERNAME="graylog-test-user"
-SIEM_PASSWORD="graylog-test-password"
+#SIEM_USERNAME=""
+#SIEM_PASSWORD=""
 GRAYLOG_URL=http://127.0.0.1:9000
 
 # Docker Swarm read in input
-if [ ${SIEM_USERNAME} == "graylog-test-user" ] && [ ${SIEM_PASSWORD} == "graylog-test-password" ]
+if [ -z "${SIEM_USERNAME}" ] && [ -z "${SIEM_PASSWORD}" ]
 then
   echo -n "Enter Graylog admin username: "
   read SIEM_USERNAME
