@@ -84,12 +84,14 @@
     group: 'splunk'
     mode: 0644
   with_items: "{{ data_sources }}"
+  register: splunk_hec_config
 
 - name: Restart Splunk service
   service:
     name: 'splunk'
     enabled: yes
     state: restarted
+  when: splunk_hec_config.changed
 
 - name: Splunk HEC healthcheck
   uri:
@@ -102,6 +104,7 @@
   until: _result.status == 200
   retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
   delay: 5 # Every 5 seconds
+  
 
 ##################################################################
 # Modify Logstash output with HEC tokens
@@ -114,8 +117,8 @@
     group: 'logstash'
     mode: 0640
 
-# - name: Restart Logstash
-#   service:
-#     name: logstash
-#     enabled: yes
-#     state: restarted
+- name: Restart Logstash
+  service:
+    name: logstash
+    enabled: yes
+    state: restarted

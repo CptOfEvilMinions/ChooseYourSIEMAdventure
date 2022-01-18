@@ -14,9 +14,9 @@
     #  delegate_to: "{{ groups.elastic[0] }}"
 
     #### Setup Graylog ####
-    - import_tasks: 'roles/ingestor/setup_graylog.yml'
-      delegate_to: "{{ groups.graylog[0] }}"
+    #- import_tasks: 'roles/ingestor/setup_graylog.yml'
+    #  delegate_to: "{{ groups.graylog[0] }}"
 
     #### Setup Splunk ####
-    #- import_tasks: 'roles/ingestor/setup_splunk.yml'
-    #  delegate_to: "{{ groups.splunk[0] }}"
+    - import_tasks: 'roles/ingestor/setup_splunk.yml'
+      delegate_to: "{{ groups.splunk[0] }}"

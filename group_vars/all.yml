@@ -3,7 +3,7 @@ base_domain: 'hackinglab.local'
 timezone: 'Etc/UTC'
 
 siem_username: 'admin'
-siem_password: '$h,a&gA/UM]:DRxcLC7&29K5m\'
+siem_password: '"f:yS\E=XddB=QnaS9({!~NtT'
 
 data_sources: [
   ##### Test #####
