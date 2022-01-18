@@ -3,4 +3,23 @@ base_domain: 'hackinglab.local'
 timezone: 'Etc/UTC'
 
 siem_username: 'admin'
-siem_password: 'Changeme123!'
+siem_password: '"f:yS\E=XddB=QnaS9({!~NtT'
+
+data_sources: [
+  ##### Test #####
+  { "name": "test", "topic": "test", "index": "main", "sourcetype": "httpevent", "message_field": "%{message}"},
+  ##### Syslog #####
+  { "name": "syslog", "topic": "syslog", "index": "syslog", "sourcetype": "syslog", "message_field": "%{message}"},
+  ##### Zeek/Bro #####
+  { "name": "zeek", "topic": "zeek", "index": "zeek", "sourcetype": "bro:json"},
+  ##### Suricata #####
+  { "name": "suricata", "topic": "suricata","index": "suricata", "sourcetype": "_json"},
+  ##### Osquery #####
+  { "name": "osquery", "topic": "osquery","index": "osquery", "sourcetype": "_json"},
+  ##### Sysmon #####
+  { "name": "sysmon", "topic": "sysmon", "index": "sysmon", "sourcetype": "_json"},
+  ##### Velociraptor #####
+  { "name": "velociraptor", "topic": "velociraptor", "index": "velociraptor", "sourcetype": "_json"},
+  ##### Windows Event Logs #####
+  { "name": "wineventlogs", "topic": "wineventlogs", "index": "wineventlogs", "sourcetype": "_json"},
+]

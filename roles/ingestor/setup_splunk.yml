@@ -7,6 +7,7 @@
     dest: '/etc/logstash/conf.d/03-input-kafka.conf'
     owner: logstash
     group: logstash
+  with_items: "{{ data_sources }}"
 
 - name: Remove BEATs input
   file:
@@ -17,7 +18,7 @@
     - '/etc/logstash/conf.d/30-output-splunk-hec.conf'
 
 ####################################################################
-# Create Splunk HEC inputs
+# Create Splunk indexes
 ####################################################################
 - name: Sign into Splunk
   uri:
@@ -27,7 +28,7 @@
     body_format: form-urlencoded
     body:
       - [ username, admin ]
-      - [ password, Changeme123! ]
+      - [ password, "{{ siem_password }}" ]
       - [ output_mode, json]
     status_code: 200
     validate_certs: no
@@ -43,64 +44,74 @@
       Content-Type: application/json
     body_format: form-urlencoded
     body:
-      - [ name, "{{ item.index_name }}"]
+      - [ name, "{{ item.index }}"]
       - [ datatype, event ]
       - [ output_mode, json]
     status_code: [201,409]
     validate_certs: no
-  with_items:
-    - { index_name: 'osquery', sourcetype: "_json" }
-    - { index_name: 'sysmon', sourcetype: "XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" }
-    - { index_name: 'zeek', sourcetype: "bro:json" }
+  with_items: "{{ data_sources }}"
 
-- name: Create Splunk HEC inputs
+####################################################################
+# Setup Splunk HEC
+####################################################################
+- name: Create HEC local directory
+  file:
+    path: '/opt/splunk/etc/apps/splunk_httpinput/local'
+    state: directory
+    owner: 'splunk'
+    group: 'splunk'
+
+- name: Copy Splunk HEC system config
+  template:
+    src: 'conf/ansible/splunk/splunk-hec-global-config.conf'
+    dest: '/opt/splunk/etc/apps/splunk_httpinput/local/inputs.conf'
+    owner: 'splunk'
+    group: 'splunk'
+    mode: 0644
+
+- name: Create Seach app local directory
+  file:
+    path: '/opt/splunk/etc/apps/search/local'
+    state: directory
+    owner: 'splunk'
+    group: 'splunk'
+
+- name: Copy Splunk HEC input
+  template:
+    src: 'conf/ansible/splunk/splunk-hec.conf'
+    dest: '/opt/splunk/etc/apps/search/local/inputs.conf'
+    owner: 'splunk'
+    group: 'splunk'
+    mode: 0644
+  with_items: "{{ data_sources }}"
+  register: splunk_hec_config
+
+- name: Restart Splunk service
+  service:
+    name: 'splunk'
+    enabled: yes
+    state: restarted
+  when: splunk_hec_config.changed
+
+- name: Splunk HEC healthcheck
   uri:
-    url: "https://127.0.0.1:8089/servicesNS/admin/splunk_httpinput/data/inputs/http"
-    method: "POST"
-    return_content: true
-    headers:
-      Authorization: "Splunk {{ _result.json.sessionKey }}"
-      Content-Type: application/json
-    body_format: form-urlencoded
-    body:
-      - [ name, "{{ item.index_name }}_hec_token"]
-      - [ index, "{{ item.index_name }}" ]
-      - [ sourcetype, "{{ item.sourcetype }}" ]
-      - [ output_mode, json]
-    status_code: [201,409]
-    validate_certs: no
-  with_items:
-    - { index_name: 'osquery', sourcetype: "_json" }
-    - { index_name: 'sysmon', sourcetype: "XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" }
-    - { index_name: 'zeek', sourcetype: "bro:json" }
-
-- name: Get Splunk get HEC inputs tokens
-  uri:
-    url: "https://127.0.0.1:8089/servicesNS/admin/splunk_httpinput/data/inputs/http/"
-    method: "GET"
-    return_content: true
-    headers:
-      Authorization: "Splunk {{ _result.json.sessionKey }}"
-      Content-Type: application/json
-    body_format: form-urlencoded
-    body:
-      - [ output_mode, json]
-    status_code: [200]
-    validate_certs: no
-  register: _result  
-
-- name: Setting host facts using complex arguments
-  set_fact:
-    "{{ item.content.index }}_hec_token": "{{ item.content.token }}"
-  loop: "{{ _result.json.entry }}"
-  no_log: true
+    url: "http://127.0.0.1:8088/services/collector/health"
+    follow_redirects: none
+    method: GET
+    remote_src: yes
+    status_code: 200
+  register: _result
+  until: _result.status == 200
+  retries: 720 # 720 * 5 seconds = 1hour (60*60/5)
+  delay: 5 # Every 5 seconds
+  
 
 ##################################################################
 # Modify Logstash output with HEC tokens
 ##################################################################
 - name: Copy Splunk HEC outputs
   template:
-    src: 'conf/ansible/splunk/31-output-splunk-hec.conf'
+    src: 'conf/ansible/splunk/31-output-splunk-hec-colossal-ingestor.conf'
     dest: '/etc/logstash/conf.d/31-output-splunk-hec.conf'
     owner: 'logstash'
     group: 'logstash'
