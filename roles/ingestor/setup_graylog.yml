@@ -1,7 +1,7 @@
 #####################################################################
-# Setup Graylog Beats input
+# Setup Graylog Kakfa inputs
 #####################################################################
-- name: Check if Beats input exists
+- name: Get list of inputs
   uri:
     url: http://127.0.0.1:9000/api/system/inputs
     user: "{{ siem_username }}"
@@ -14,7 +14,7 @@
   retries: 100
   delay: 1
 
-- name: Create Beats input
+- name: Create Kafka topic input
   uri:
     url: http://127.0.0.1:9000/api/system/inputs
     user: "{{ siem_username }}"
@@ -28,11 +28,11 @@
     body_format: json
     body: |
       {
-        "title": "Kafka {{ item }} input",
+        "title": "kafka-{{ item.name }}-input",
         "type": "org.graylog2.inputs.raw.kafka.RawKafkaInput",
         "global": true,
         "configuration": {
-          "topic_filter": "{{ item }}",
+          "topic_filter": "{{ item.topic }}",
           "fetch_wait_max": 100,
           "offset_reset": "largest",
           "zookeeper": "",
@@ -47,8 +47,252 @@
         },
         "node": null
       }
-  with_items:
-    - 'sysmon'
-    - 'osquery'
-    - 'test'
-  when: input_list.json.total != 4
+  with_items: "{{ data_sources }}"
+  when: input_list.json.total != data_sources | length
+
+#####################################################################
+# Setup Graylog input extractors
+#####################################################################
+- name: Get list of inputs
+  uri:
+    url: http://127.0.0.1:9000/api/system/inputs
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: GET
+    return_content: yes
+  register: graylog_inputs
+
+
+- name: Set vars for Graylog
+  set_fact:
+    '{{ item.name }}_datasource': "{{ item.sourcetype }}"
+  with_items: "{{ data_sources }}"
+
+- debug:
+    msg: "{{ test_datasource }}"
+
+- debug: 
+    msg: '{{ item.title.split("-")[1] }}'
+  with_items: "{{ graylog_inputs.json.inputs }}"
+
+
+- name: Create input data extractor
+  uri:
+    url: http://127.0.0.1:9000/api/system/inputs/{{ item.id }}/extractors
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: POST
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: 201
+    body_format: json
+    body: |
+      {
+        "title": "{{ item.title }}-json-extractor",
+        "extractor_type": "json",
+        "converters": {},
+        "order": 0,
+        "cut_or_copy": "copy",
+        "source_field": "message",
+        "target_field": "",
+        "extractor_config": {
+          "list_separator": ", ",
+          "kv_separator": "=",
+          "key_prefix": "",
+          "key_separator": "_",
+          "replace_key_whitespace": false,
+          "key_whitespace_replacement": "_"
+        },
+        "condition_type": "none",
+        "condition_value": ""
+      }
+  with_items: "{{ graylog_inputs.json.inputs }}"
+  when: vars[ item.title.split("-")[1] + '_datasource'] is match(".*json.*")
+
+#####################################################################
+# Setup Graylog indexes
+#####################################################################
+- name: Get Graylog indices
+  uri:
+    url: 'http://127.0.0.1:9000/api/system/indices/index_sets?skip=0&limit=0&stats=false'
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: GET
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [200]
+  register: graylog_indices
+
+# - debug:
+#     msg: "{{ graylog_indices }}"
+
+- name: Create Graylog index
+  uri:
+    url: http://127.0.0.1:9000/api/system/indices/index_sets
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: POST
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [200, 400]
+    body_format: json
+    body: |
+      {
+        "title": "{{ item.name }}",
+        "description": "Store {{ item.name }} data",
+        "can_be_default": true,
+        "index_prefix": "{{ item.name }}-",
+        "shards": 4,
+        "replicas": 0,
+        "rotation_strategy_class": "org.graylog2.indexer.rotation.strategies.MessageCountRotationStrategy",
+        "rotation_strategy": {
+          "type": "org.graylog2.indexer.rotation.strategies.MessageCountRotationStrategyConfig",
+          "max_docs_per_index": 20000000
+        },
+        "retention_strategy_class": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy",
+        "retention_strategy": {
+          "type": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig",
+          "max_number_of_indices": 20
+        },
+        "creation_date": "2022-01-02T06:48:09.224Z",
+        "index_analyzer": "standard",
+        "index_optimization_max_num_segments": 1,
+        "index_optimization_disabled": false,
+        "field_type_refresh_interval": 5000,
+        "index_template_type": null,
+        "default": false,
+        "writable": true
+      }
+  with_items: "{{ data_sources }}"
+  when: graylog_indices.json.total < data_sources | length
+
+
+#####################################################################
+# Setup Graylog streams
+#####################################################################
+- name: Get Graylog indices
+  uri:
+    url: 'http://127.0.0.1:9000/api/system/indices/index_sets?skip=0&limit=0&stats=false'
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: GET
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [200]
+  register: graylog_indices
+
+- name: Set vars for Graylog
+  set_fact:
+    '{{ item.title | replace(" ", "_")  }}_index_set_id': "{{ item.id }}"
+  with_items: "{{ graylog_indices.json.index_sets }}"
+
+- debug:
+    msg: "{{ vars[item.name | replace(' ', '_') + '_index_set_id'] }}"
+  with_items: "{{ data_sources }}"
+
+- name: Get Graylog streams
+  uri:
+    url: 'http://127.0.0.1:9000/api/streams'
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: GET
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [200]
+  register: graylog_streams
+
+- name: Get list of inputs
+  uri:
+    url: http://127.0.0.1:9000/api/system/inputs
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: GET
+    return_content: yes
+  register: input_list
+  register: graylog_inputs
+
+- name: Set vars for Graylog
+  set_fact:
+    '{{ item.title | replace("-", "_")}}': "{{ item.id }}"
+  with_items: "{{ graylog_inputs.json.inputs }}"
+
+- debug:
+    msg: "{{ vars['kafka_' + item.name + '_input'] }}"
+  with_items: "{{ data_sources }}"
+
+- debug:
+    msg: "{{ kafka_wineventlogs_input }}"
+
+- name: Create Graylog streams
+  uri:
+    url: http://127.0.0.1:9000/api/streams
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: POST
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [201]
+    body_format: json
+    body: |
+      {
+        "matching_type": "AND",
+        "description": "{{ item.name }} data stream",
+        "rules": [
+          {
+            "field": "",
+            "description": "",
+            "type": 8,
+            "inverted": false,
+            "value": "{{ vars['kafka_' + item.name.split('-')[0] + '_input'] }}"
+          }
+        ],
+        "title": "{{ item.name }}-stream",
+        "content_pack": null,
+        "remove_matches_from_default_stream": true,
+        "index_set_id": "{{ vars[item.name | replace(' ', '_') + '_index_set_id'] }}"
+      }
+  with_items: "{{ data_sources }}"
+  when: graylog_streams.json.total < data_sources | length
+
+
+- name: Get Graylog streams
+  uri:
+    url: 'http://127.0.0.1:9000/api/streams'
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: GET
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [200]
+  register: graylog_streams
+
+- name: Enable Graylog streams
+  uri:
+    url: http://127.0.0.1:9000/api/streams/{{ item.id }}/resume
+    user: "{{ siem_username }}"
+    password: "{{ siem_password }}"
+    force_basic_auth: yes
+    method: POST
+    headers:
+      X-Requested-By: "cli"
+    return_content: true
+    status_code: [204,400]
+    body_format: json
+  with_items: "{{ graylog_streams.json.streams }}"
+  when: item.id is not match("00000000000000.*")
